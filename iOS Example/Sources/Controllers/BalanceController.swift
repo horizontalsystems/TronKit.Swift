@@ -75,7 +75,6 @@ class BalanceController: UIViewController {
 
     private func sync() {
         let syncStateString: String
-        let txSyncStateString: String
 
         var errorTexts = [String]()
 
@@ -93,32 +92,16 @@ class BalanceController: UIViewController {
             errorTexts.append("Sync Error: \(error)")
         }
 
-        switch adapter.transactionsSyncState {
-        case .synced:
-            txSyncStateString = "Synced!"
-        case .syncing(let progress):
-            if let progress = progress {
-                txSyncStateString = "Syncing \(Int(progress * 100)) %"
-            } else {
-                txSyncStateString = "Syncing"
-            }
-        case .notSynced(let error):
-            txSyncStateString = "Not Synced"
-            errorTexts.append("Tx Sync Error: \(error)")
-        }
-
         errorsLabel.text = errorTexts.joined(separator: "\n\n")
 
         titlesLabel.set(string: """
                     Sync state:
-                    Tx Sync state:
                     Last block height:
                     Balance:
                     """, alignment: .left)
 
         valuesLabel.set(string: """
                     \(syncStateString)
-                    \(txSyncStateString)
                     \(adapter.lastBlockHeight.map { "# \($0)" } ?? "n/a")
                     \(adapter.balance) \(adapter.coin)
                     """, alignment: .right)

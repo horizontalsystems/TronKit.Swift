@@ -6,7 +6,7 @@ import BigInt
 class TrxAdapter {
     private let tronKit: Kit
     private let signer: Signer?
-    private let decimal = 18
+    private let decimal = 6
 
     init(TronKit: Kit, signer: Signer?) {
         self.tronKit = TronKit
@@ -70,11 +70,11 @@ extension TrxAdapter {
     }
 
     var transactionsSyncState: SyncState {
-        tronKit.transactionsSyncState
+        tronKit.syncState
     }
 
     var balance: Decimal {
-        if let significand = Decimal(string: tronKit.balance.description) {
+        if let significand = Decimal(string: tronKit.trxBalance.description) {
             return Decimal(sign: .plus, exponent: -decimal, significand: significand)
         }
 
@@ -94,11 +94,11 @@ extension TrxAdapter {
     }
 
     var transactionsSyncStatePublisher: AnyPublisher<Void, Never> {
-        tronKit.transactionsSyncStatePublisher.map { _ in () }.eraseToAnyPublisher()
+        tronKit.syncStatePublisher.map { _ in () }.eraseToAnyPublisher()
     }
 
     var balancePublisher: AnyPublisher<Void, Never> {
-        tronKit.accountStatePublisher.map { _ in () }.eraseToAnyPublisher()
+        tronKit.trxBalancePublisher.map { _ in () }.eraseToAnyPublisher()
     }
 
     var transactionsPublisher: AnyPublisher<Void, Never> {

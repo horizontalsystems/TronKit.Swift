@@ -6,10 +6,9 @@ import HsCryptoKit
 import HsToolKit
 
 public class Kit {
-    private var cancellables = Set<AnyCancellable>()
-    private let lastBlockHeightSubject = PassthroughSubject<Int, Never>()
-    private let syncStateSubject = PassthroughSubject<SyncState, Never>()
-    private let accountStateSubject = PassthroughSubject<BigUInt, Never>()
+    private let syncer: Syncer
+    private let accountInfoManager: AccountInfoManager
+    private let transactionManager: TransactionManager
 
     public let address: Address
     public let network: Network
@@ -17,10 +16,13 @@ public class Kit {
     public let logger: Logger
 
 
-    init(address: Address, network: Network, uniqueId: String, logger: Logger) {
+    init(address: Address, network: Network, uniqueId: String, syncer: Syncer, accountInfoManager: AccountInfoManager, transactionManager: TransactionManager, logger: Logger) {
         self.address = address
         self.network = network
         self.uniqueId = uniqueId
+        self.accountInfoManager = accountInfoManager
+        self.transactionManager = transactionManager
+        self.syncer = syncer
         self.logger = logger
     }
 
@@ -31,19 +33,15 @@ public class Kit {
 extension Kit {
 
     public var lastBlockHeight: Int? {
-        0
-    }
-
-    public var balance: BigUInt {
-        BigUInt.zero
+        syncer.lastBlockHeight
     }
 
     public var syncState: SyncState {
-        .synced
+        syncer.state
     }
 
-    public var transactionsSyncState: SyncState {
-        .synced
+    public var trxBalance: BigUInt {
+        accountInfoManager.trxBalance
     }
 
     public var receiveAddress: Address {
@@ -51,19 +49,15 @@ extension Kit {
     }
 
     public var lastBlockHeightPublisher: AnyPublisher<Int, Never> {
-        lastBlockHeightSubject.eraseToAnyPublisher()
+        syncer.$lastBlockHeight.eraseToAnyPublisher()
     }
 
     public var syncStatePublisher: AnyPublisher<SyncState, Never> {
-        syncStateSubject.eraseToAnyPublisher()
+        syncer.$state.eraseToAnyPublisher()
     }
 
-    public var transactionsSyncStatePublisher: AnyPublisher<SyncState, Never> {
-        Just(.synced).eraseToAnyPublisher()
-    }
-
-    public var accountStatePublisher: AnyPublisher<BigUInt, Never> {
-        accountStateSubject.eraseToAnyPublisher()
+    public var trxBalancePublisher: AnyPublisher<BigUInt, Never> {
+        accountInfoManager.trxBalancePublisher
     }
 
     public var allTransactionsPublisher: AnyPublisher<([FullTransaction], Bool), Never> {
@@ -71,12 +65,15 @@ extension Kit {
     }
 
     public func start() {
+        syncer.start()
     }
 
     public func stop() {
+        syncer.stop()
     }
 
     public func refresh() {
+        syncer.refresh()
     }
 
     public func fetchTransaction(hash: Data) async throws -> FullTransaction {
@@ -104,9 +101,23 @@ extension Kit {
 
         let networkManager = NetworkManager(logger: logger)
         let reachabilityManager = ReachabilityManager()
+        let databaseDirectoryUrl = try dataDirectoryUrl()
+        let syncerStateStorage = SyncerStateStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "syncer-state-storage")
+        let accountInfoStorage = AccountInfoStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "account-info-storage")
+
+        let accountInfoManager = AccountInfoManager(storage: accountInfoStorage)
+        let transactionManager = TransactionManager()
+
+        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: "https://api.trongrid.io/", auth: nil)
+        let syncTimer = SyncTimer(reachabilityManager: reachabilityManager, syncInterval: 15)
+        let syncer = Syncer(accountInfoManager: accountInfoManager, transactionManager: transactionManager, syncTimer: syncTimer, tronGridProvider: tronGridProvider, storage: syncerStateStorage, address: address)
 
         let kit = Kit(
-            address: address, network: network, uniqueId: uniqueId, logger: logger
+            address: address, network: network, uniqueId: uniqueId,
+            syncer: syncer,
+            accountInfoManager: accountInfoManager,
+            transactionManager: transactionManager,
+            logger: logger
         )
 
         return kit
