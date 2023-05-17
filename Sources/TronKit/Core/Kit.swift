@@ -61,7 +61,15 @@ extension Kit {
     }
 
     public var allTransactionsPublisher: AnyPublisher<([FullTransaction], Bool), Never> {
-        Just(([], true)).eraseToAnyPublisher()
+        transactionManager.fullTransactionsPublisher
+    }
+
+    public func transactionsPublisher(tagQueries: [TransactionTagQuery]) -> AnyPublisher<[FullTransaction], Never> {
+        transactionManager.fullTransactionsPublisher(tagQueries: tagQueries)
+    }
+
+    public func transactions(tagQueries: [TransactionTagQuery], fromHash: Data? = nil, limit: Int? = nil) -> [FullTransaction] {
+        transactionManager.fullTransactions(tagQueries: tagQueries, fromHash: fromHash, limit: limit)
     }
 
     public func start() {
@@ -97,7 +105,7 @@ extension Kit {
 
     public static func instance(address: Address, network: Network, walletId: String, minLogLevel: Logger.Level = .error) throws -> Kit {
         let logger = Logger(minLogLevel: minLogLevel)
-        let uniqueId = "\(walletId)-\(network.id)"
+        let uniqueId = "\(walletId)-\(network.rawValue)"
 
         let networkManager = NetworkManager(logger: logger)
         let reachabilityManager = ReachabilityManager()
@@ -106,10 +114,19 @@ extension Kit {
         let accountInfoStorage = AccountInfoStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "account-info-storage")
 
         let accountInfoManager = AccountInfoManager(storage: accountInfoStorage)
-        let transactionManager = TransactionManager()
 
-        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: "https://api.trongrid.io/", auth: nil)
-        let syncTimer = SyncTimer(reachabilityManager: reachabilityManager, syncInterval: 15)
+        let transactionStorage = TransactionStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "transactions-storage")
+        let decorationManager = DecorationManager(userAddress: address, storage: transactionStorage)
+        let transactionManager = TransactionManager(userAddress: address, storage: transactionStorage, decorationManager: decorationManager)
+
+        let tronGridUrl: String
+        switch network {
+        case .mainNet: tronGridUrl = "https://api.trongrid.io/"
+        case .nileTestnet: tronGridUrl = "https://nile.trongrid.io/"
+        case .shastaTestnet: tronGridUrl = "https://api.shasta.trongrid.io"
+        }
+        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: tronGridUrl, auth: nil)
+        let syncTimer = SyncTimer(reachabilityManager: reachabilityManager, syncInterval: 30)
         let syncer = Syncer(accountInfoManager: accountInfoManager, transactionManager: transactionManager, syncTimer: syncTimer, tronGridProvider: tronGridProvider, storage: syncerStateStorage, address: address)
 
         let kit = Kit(
@@ -119,6 +136,8 @@ extension Kit {
             transactionManager: transactionManager,
             logger: logger
         )
+
+        decorationManager.add(transactionDecorator: Trc20TransactionDecorator(address: address))
 
         return kit
     }

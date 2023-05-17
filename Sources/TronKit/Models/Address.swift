@@ -6,11 +6,18 @@ import HsExtensions
 public struct Address {
     public let raw: Data
 
-    public init(raw: Data) {
-        self.raw = raw
+    public init(raw: Data) throws {
+        var prefixedRaw = raw
+
+        if prefixedRaw.count == 20 {
+            prefixedRaw = [0x41] + prefixedRaw
+        }
+
+        try Address.validate(data: prefixedRaw)
+        self.raw = prefixedRaw
     }
 
-    public init(address: String, network: Network) throws {
+    public init(address: String) throws {
         let decoded = Base58.decode(address)
         guard decoded.count > 4 else {
             throw ValidationError.invalidAddressLength
@@ -25,9 +32,7 @@ public struct Address {
             throw ValidationError.invalidChecksum
         }
 
-        try Address.validate(data: hex, network: network)
-
-        raw = hex
+        try self.init(raw: hex)
     }
 
     public var hex: String {
@@ -43,8 +48,8 @@ public struct Address {
 
 extension Address {
 
-    private static func validate(data: Data, network: Network) throws {
-        guard data[0] == network.addressPrefix else {
+    private static func validate(data: Data) throws {
+        guard data[0] == 0x41 else {
             throw ValidationError.wrongAddressPrefix
         }
         guard data.count == 21 else {
@@ -83,7 +88,7 @@ extension Address: DatabaseValueConvertible {
     public static func fromDatabaseValue(_ dbValue: DatabaseValue) -> Address? {
         switch dbValue.storage {
             case .blob(let data):
-                return Address(raw: data)
+                return try! Address(raw: data)
             default:
                 return nil
         }

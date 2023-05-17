@@ -65,11 +65,27 @@ struct HexDataTransform: TransformType {
 struct HexAddressTransform: TransformType {
 
     func transformFromJSON(_ value: Any?) -> Address? {
-        guard let hexString = value as? String else {
+        guard let hexString = value as? String, let hexData = hexString.hs.hexData else {
             return nil
         }
 
-        return Address(raw: hexString.hs.data)
+        return try? Address(raw: hexData)
+    }
+
+    func transformToJSON(_ value: Address?) -> String? {
+        fatalError("transformToJSON(_:) has not been implemented")
+    }
+
+}
+
+struct StringAddressTransform: TransformType {
+
+    func transformFromJSON(_ value: Any?) -> Address? {
+        guard let base58String = value as? String else {
+            return nil
+        }
+
+        return try? Address(address: base58String)
     }
 
     func transformToJSON(_ value: Address?) -> String? {

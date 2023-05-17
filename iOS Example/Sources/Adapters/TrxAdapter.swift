@@ -14,26 +14,15 @@ class TrxAdapter {
     }
 
     private func transactionRecord(fullTransaction: FullTransaction) -> TransactionRecord {
-//        let transaction = fullTransaction.transaction
-//
-//        var amount: Decimal?
-//
-//        if let value = transaction.value, let significand = Decimal(string: value.description) {
-//            amount = Decimal(sign: .plus, exponent: -decimal, significand: significand)
-//        }
+        let transaction = fullTransaction.transaction
 
         return TransactionRecord(
-                transactionHash: "transaction.hash.hs.hexString",
-                transactionHashData: Data(),
-                timestamp: 0,
-                isFailed: false,
-                from: nil,
-                to: nil,
-                amount: nil,
-                input: nil,
-                blockHeight: nil,
-                transactionIndex: nil,
-                decoration: ""
+            transactionHash: transaction.hash.hs.hex,
+            transactionHashData: transaction.hash,
+            timestamp: transaction.timestamp,
+            isFailed: transaction.isFailed,
+            blockHeight: transaction.blockNumber,
+            decoration: fullTransaction.decoration
         )
     }
 
@@ -106,7 +95,7 @@ extension TrxAdapter {
     }
 
     func transactions(from hash: Data?, limit: Int?) -> [TransactionRecord] {
-        []
+        tronKit.transactions(tagQueries: [], fromHash: hash, limit: limit).compactMap { transactionRecord(fullTransaction: $0) }
     }
 
     func transaction(hash: Data, interTransactionIndex: Int) -> TransactionRecord? {

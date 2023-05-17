@@ -14,13 +14,13 @@ extension Signer {
         Signer()
     }
 
-    public static func address(seed: Data, network: Network) throws -> Address {
-        address(privateKey: try privateKey(seed: seed, network: network), network: network)
+    public static func address(seed: Data) throws -> Address {
+        try address(privateKey: try privateKey(seed: seed))
     }
 
-    public static func address(privateKey: Data, network: Network) -> Address {
+    public static func address(privateKey: Data) throws -> Address {
         let publicKey = Data(Crypto.publicKey(privateKey: privateKey, compressed: false).dropFirst())
-        return Address(raw: [network.addressPrefix] + Data(Crypto.sha3(publicKey).suffix(20)))
+        return try Address(raw: [0x41] + Data(Crypto.sha3(publicKey).suffix(20)))
     }
 
     public static func privateKey(string: String) throws -> Data {
@@ -35,8 +35,8 @@ extension Signer {
         return data
     }
 
-    public static func privateKey(seed: Data, network: Network) throws -> Data {
-        let hdWallet = HDWallet(seed: seed, coinType: network.coinType, xPrivKey: HDExtendedKeyVersion.xprv.rawValue)
+    public static func privateKey(seed: Data) throws -> Data {
+        let hdWallet = HDWallet(seed: seed, coinType: 195, xPrivKey: HDExtendedKeyVersion.xprv.rawValue)
         return try hdWallet.privateKey(account: 0, index: 0, chain: .external).raw
     }
 

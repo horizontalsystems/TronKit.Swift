@@ -47,7 +47,7 @@ class Manager {
         let signer = try Signer.instance(seed: seed)
 
         try initKit(
-                address: try Signer.address(seed: seed, network: configuration.network),
+                address: try Signer.address(seed: seed),
                 configuration: configuration,
                 signer: signer
         )
@@ -72,7 +72,7 @@ class Manager {
             return nil
         }
 
-        return try? Address(address: addressString, network: tronKit.network)
+        return try? Address(address: addressString)
     }
 
     private func save(words: [String]) {
@@ -105,7 +105,7 @@ extension Manager {
     func watch(address: Address) throws {
         try Kit.clear(exceptFor: ["walletId"])
 
-        save(address: address.hex)
+        save(address: address.base58)
         try initKit(address: address)
     }
 

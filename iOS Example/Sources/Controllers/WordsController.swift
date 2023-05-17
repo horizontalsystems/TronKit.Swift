@@ -155,7 +155,7 @@ class WordsController: UIViewController {
         let text = addressFieldView.text ?? ""
 
         do {
-            let address = try Address(address: text, network: Manager.shared.tronKit.network)
+            let address = try Address(address: text)
 
             try Manager.shared.watch(address: address)
 

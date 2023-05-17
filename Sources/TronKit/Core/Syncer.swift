@@ -81,20 +81,45 @@ extension Syncer: ISyncTimerDelegate {
 
                 let response = try await tronGridProvider.fetchAccountInfo(address: address)
                 self?.accountInfoManager.handle(accountInfoResponse: response)
-//
-//                let transactions = try await tronGridProvider.fetchTransactions(address: address, lastTimestamp: storage.lastTransactionTimestamp(apiPath: TronGridProvider.ApiPath.transactions.rawValue) ?? 0)
-//                let trc20Transactions = try await tronGridProvider.fetchTrc20Transactions(address: address, lastTimestamp: storage.lastTransactionTimestamp(apiPath: TronGridProvider.ApiPath.transactionsTrc20.rawValue) ?? 0)
-//
-//                self?.transactionManager.handle(transactions: transactions, trc20Transactions: trc20Transactions)
-//
-//                if let lastTransaction = transactions.first {
-//                    storage.save(apiPath: TronGridProvider.ApiPath.transactions.rawValue, lastTransactionTimestamp: lastTransaction.blockTimestamp)
-//                }
-//
-//                if let lastTransaction = trc20Transactions.first {
-//                    storage.save(apiPath: TronGridProvider.ApiPath.transactionsTrc20.rawValue, lastTransactionTimestamp: lastTransaction.blockTimestamp)
-//                }
 
+                let lastTrc20TxTimestamp = storage.lastTransactionTimestamp(apiPath: TronGridProvider.ApiPath.transactionsTrc20.rawValue) ?? 0
+                var fingerprint: String?
+                var completed = false
+                repeat {
+                    let fetchResult = try await tronGridProvider.fetchTrc20Transactions(
+                        address: address,
+                        minTimestamp: lastTrc20TxTimestamp + 1000,
+                        fingerprint: fingerprint
+                    )
+
+                    if let lastTransaction = fetchResult.transactions.last {
+                        self?.transactionManager.save(trc20TransferResponses: fetchResult.transactions)
+                        storage.save(apiPath: TronGridProvider.ApiPath.transactionsTrc20.rawValue, lastTransactionTimestamp: lastTransaction.blockTimestamp)
+                    }
+                    fingerprint = fetchResult.fingerprint
+                    completed = fetchResult.completed
+                } while !completed
+
+                let lastTxTimestamp = storage.lastTransactionTimestamp(apiPath: TronGridProvider.ApiPath.transactions.rawValue) ?? 0
+                fingerprint = nil
+                completed = false
+                repeat {
+                    let fetchResult = try await tronGridProvider.fetchTransactions(
+                        address: address,
+                        minTimestamp: lastTxTimestamp + 1000,
+                        fingerprint: fingerprint
+                    )
+
+                    if let lastTransaction = fetchResult.transactions.last {
+                        self?.transactionManager.save(transactionResponses: fetchResult.transactions)
+                        storage.save(apiPath: TronGridProvider.ApiPath.transactions.rawValue, lastTransactionTimestamp: lastTransaction.blockTimestamp)
+                    }
+
+                    fingerprint = fetchResult.fingerprint
+                    completed = fetchResult.completed
+                } while !completed
+
+                self?.transactionManager.process(initial: lastTxTimestamp == 0 || lastTrc20TxTimestamp == 0)
                 self?.state = .synced
             } catch {
                 self?.state = .notSynced(error: error)

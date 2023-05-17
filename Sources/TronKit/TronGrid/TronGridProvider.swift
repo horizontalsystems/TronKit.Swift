@@ -9,6 +9,7 @@ class TronGridProvider {
 
     private let headers: HTTPHeaders
     private var currentRpcId = 0
+    private let pageLimit = 200
 
     init(networkManager: NetworkManager, baseUrl: String, auth: String?) {
         self.networkManager = networkManager
@@ -35,10 +36,10 @@ class TronGridProvider {
         )
     }
 
-    private func extensionApiFetch(path: String) async throws -> [[String: Any]] {
+    private func extensionApiFetch(path: String, parameters: Parameters) async throws -> (data: [[String: Any]], meta: [String: Any]) {
         let urlString = "\(baseUrl)/\(path)"
 
-        let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: [:], responseCacherBehavior: .doNotCache)
+        let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: parameters, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
             throw RequestError.invalidResponse
@@ -52,7 +53,11 @@ class TronGridProvider {
             throw RequestError.invalidResponse
         }
 
-        return data
+        guard let meta = map["meta"] as? [String: Any] else {
+            throw RequestError.invalidResponse
+        }
+
+        return (data, meta)
     }
 
 }
@@ -94,25 +99,56 @@ extension TronGridProvider {
     }
 
     func fetchAccountInfo(address: String) async throws -> AccountInfoResponse {
-        let jsonObjects = try await extensionApiFetch(path: "v1/accounts/\(address)")
+        let result = try await extensionApiFetch(path: "v1/accounts/\(address)", parameters: [:])
 
-        guard !jsonObjects.isEmpty else {
+        guard !result.data.isEmpty else {
             throw RequestError.failedToFetchAccountInfo
         }
 
-        return try AccountInfoResponse(JSON: jsonObjects[0])
+        return try AccountInfoResponse(JSON: result.data[0])
     }
 
-    func fetchTransactions(address: String, lastTimestamp: Int) async throws -> [TransactionResponse] {
-        let path = "v1/accounts/\(address)/\(ApiPath.transactions.rawValue)?min_timestamp=\(lastTimestamp)"
-        let jsonObjects = try await extensionApiFetch(path: path)
-        return try jsonObjects.compactMap { try TransactionResponse(JSON: $0) }
+    func fetchTransactions(address: String, minTimestamp: Int, fingerprint: String?) async throws -> (transactions: [ITransactionResponse], fingerprint: String?, completed: Bool) {
+        let path = "v1/accounts/\(address)/\(ApiPath.transactions.rawValue)"
+        var parameters: Parameters = [
+            "order_by": "block_timestamp,asc",
+            "limit": pageLimit,
+            "min_timestamp": minTimestamp
+        ]
+
+        fingerprint.flatMap { parameters["fingerprint"] = $0 }
+
+        let result = try await extensionApiFetch(path: path, parameters: parameters)
+        let transactions = result.data.compactMap { json -> ITransactionResponse? in
+            if json["internal_tx_id"] is String {
+                return try? InternalTransactionResponse(JSON: json)
+            } else {
+                return try? TransactionResponse(JSON: json)
+            }
+        }
+
+        let newFingerprint = result.meta["fingerprint"] as? String
+        let completed = transactions.count < pageLimit
+
+        return (transactions: transactions, fingerprint: newFingerprint, completed: completed)
     }
 
-    func fetchTrc20Transactions(address: String, lastTimestamp: Int) async throws -> [Trc20TransactionResponse] {
-        let path = "v1/accounts/\(address)/\(ApiPath.transactionsTrc20.rawValue)?min_timestamp=\(lastTimestamp)"
-        let jsonObjects = try await extensionApiFetch(path: path)
-        return try jsonObjects.compactMap { try Trc20TransactionResponse(JSON: $0) }
+    func fetchTrc20Transactions(address: String, minTimestamp: Int, fingerprint: String?) async throws -> (transactions: [Trc20TransactionResponse], fingerprint: String?, completed: Bool) {
+        let path = "v1/accounts/\(address)/\(ApiPath.transactionsTrc20.rawValue)"
+        var parameters: Parameters = [
+            "order_by": "block_timestamp,asc",
+            "limit": pageLimit,
+            "min_timestamp": minTimestamp
+        ]
+
+        fingerprint.flatMap { parameters["fingerprint"] = $0 }
+
+        let result = try await extensionApiFetch(path: path, parameters: parameters)
+        let transactions = result.data.compactMap { try? Trc20TransactionResponse(JSON: $0) }
+        let fingerprint = result.meta["fingerprint"] as? String
+        let completed = transactions.count < pageLimit
+
+        return (transactions: transactions, fingerprint: fingerprint, completed: completed)
     }
 
 }

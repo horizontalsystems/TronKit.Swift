@@ -53,32 +53,30 @@ class TransactionCell: UITableViewCell {
             confirmations = "\(lastBlockHeight - blockHeight + 1)"
         }
 
+        var contract: Contract? = nil
+
+        if let decoration = transaction.decoration as? NativeTransactionDecoration {
+            contract = decoration.contract
+        }
+
         titlesLabel.set(string: """
                     Tx Hash:
                     Date:
                     Failed:
-                    From:
-                    To:
-                    Value:
-                    Input:
                     Block:
-                    Tx Index:
                     Confirmations:
                     Decoration:
+                    Contract:
                     """, alignment: .left)
 
         valuesLabel.set(string: """
                     \(format(hash: transaction.transactionHash))
                     \(TransactionCell.dateFormatter.string(from: Date(timeIntervalSince1970: Double(transaction.timestamp))))
                     \(transaction.isFailed)
-                    \(transaction.from.map { format(hash: $0.base58) } ?? "n/a")
-                    \(transaction.to.map { format(hash: $0.base58) } ?? "n/a")
-                    \(transaction.amount.map { "\($0) ETH" } ?? "n/a")
-                    \(transaction.input.map { format(hash: $0) } ?? "n/a")
                     \(transaction.blockHeight.map { "# \($0)" } ?? "n/a")
-                    \(transaction.transactionIndex.map { "\($0)" } ?? "n/a")
                     \(confirmations)
-                    \(transaction.decoration.components(separatedBy: ".").last ?? transaction.decoration)
+                    \(String(describing: transaction.decoration))
+                    \(contract.flatMap { String(describing: type(of: $0)) } ?? "n/a")
                     """, alignment: .right)
     }
 

@@ -138,7 +138,7 @@ class SendController: UIViewController {
             return
         }
 
-        guard let address = try? Address(address: addressHex, network: Manager.shared.tronKit.network) else {
+        guard let address = try? Address(address: addressHex) else {
             return
         }
 
@@ -161,7 +161,7 @@ class SendController: UIViewController {
             return
         }
 
-        guard let address = try? Address(address: addressHex, network: Manager.shared.tronKit.network) else {
+        guard let address = try? Address(address: addressHex) else {
             show(error: "Invalid address")
             return
         }
