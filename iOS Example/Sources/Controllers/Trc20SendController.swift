@@ -3,10 +3,11 @@ import UIKit
 import SnapKit
 import TronKit
 import HsExtensions
+import BigInt
 
-class SendController: UIViewController {
+class Trc20SendController: UIViewController {
     private let adapter: TrxAdapter = Manager.shared.adapter
-    private let estimatedFeeLimit: Int? = nil
+    private var estimatedFeeLimit: Int? = nil
     private var cancellables = Set<AnyCancellable>()
 
     private let addressTextField = UITextField()
@@ -17,7 +18,7 @@ class SendController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Send TRX"
+        title = "Send Trc20 Token"
 
         let addressLabel = UILabel()
 
@@ -94,7 +95,7 @@ class SendController: UIViewController {
         ethLabel.font = .systemFont(ofSize: 13)
         ethLabel.textColor = .black
         ethLabel.text = "TRX"
-        
+
         view.addSubview(gasPriceLabel)
         gasPriceLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().inset(16)
@@ -131,7 +132,7 @@ class SendController: UIViewController {
     @objc private func updateEstimatedFee() {
         guard let addressHex = addressTextField.text?.trimmingCharacters(in: .whitespaces),
               let valueText = amountTextField.text,
-              let value = Int(valueText),
+              let value = BigUInt(valueText),
               value > 0 else {
             return
         }
@@ -142,7 +143,11 @@ class SendController: UIViewController {
 
         gasPriceLabel.text = "Loading..."
 
-        let contract = adapter.transferContract(toAddress: address, value: value)
+        let contract = adapter.transferTrc20TriggerSmartContract(
+            contractAddress: try! Address(address: Configuration.shared.defaultTrc20ContractAddress),
+            toAddress: address,
+            value: value
+        )
 
         Task { [weak self, adapter] in
             do {
@@ -156,7 +161,11 @@ class SendController: UIViewController {
 
                     switch fee {
                         case let .bandwidth(points, price): feeString = "\((Decimal(points * price) / 1_000_000).description)TRX (\(points) Bandwidth)"
-                        case let .energy(required, price): feeString = "\((Decimal(required * price) / 1_000_000).description)TRX (\(required) Energy)"
+
+                        case let .energy(required, price):
+                            feeString = "\((Decimal(required * price) / 1_000_000).description)TRX (\(required) Energy)"
+                            self?.estimatedFeeLimit = required * price
+
                         case let .accountActivation(amount): feeString = "\((Decimal(amount) / 1_000_000).description)TRX (Account Activation)"
                     }
 
@@ -180,12 +189,16 @@ class SendController: UIViewController {
             return
         }
 
-        guard let valueText = amountTextField.text, let value = Int(valueText), value > 0 else {
+        guard let valueText = amountTextField.text, let value = BigUInt(valueText), value > 0 else {
             show(error: "Invalid amount")
             return
         }
 
-        let contract = adapter.transferContract(toAddress: address, value: value)
+        let contract = adapter.transferTrc20TriggerSmartContract(
+            contractAddress: try! Address(address: Configuration.shared.defaultTrc20ContractAddress),
+            toAddress: address,
+            value: value
+        )
 
         Task { [weak self, adapter, estimatedFeeLimit] in
             do {
@@ -205,11 +218,11 @@ class SendController: UIViewController {
     }
 
     @MainActor
-    private func handleSuccess(address: Address, amount: Int) {
+    private func handleSuccess(address: Address, amount: BigUInt) {
         addressTextField.text = ""
         amountTextField.text = ""
 
-        let alert = UIAlertController(title: "Success", message: "\(amount) sent to \(address)", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Success", message: "\(amount.description) sent to \(address)", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         present(alert, animated: true)
     }

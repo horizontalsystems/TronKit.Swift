@@ -1,7 +1,7 @@
 import Foundation
 import GRDB
 
-class SyncerStateStorage {
+class SyncerStorage {
     private let dbPool: DatabasePool
 
     init(databaseDirectoryUrl: URL, databaseFileName: String) {
@@ -29,12 +29,19 @@ class SyncerStateStorage {
             }
         }
 
+        migrator.registerMigration("createChainParameter") { db in
+            try db.create(table: ChainParameter.databaseTableName) { t in
+                t.column(ChainParameter.Columns.key.name, .text).primaryKey(onConflict: .replace)
+                t.column(ChainParameter.Columns.value.name, .integer)
+            }
+        }
+
         return migrator
     }
 
 }
 
-extension SyncerStateStorage {
+extension SyncerStorage {
 
     var lastBlockHeight: Int? {
         try? dbPool.read { db in
@@ -60,6 +67,19 @@ extension SyncerStateStorage {
         _ = try! dbPool.write { db in
             let txSyncTimestamp = TransactionSyncTimestamp(apiPath: apiPath, lastTransactionTimestamp: timestamp)
             try txSyncTimestamp.insert(db)
+        }
+    }
+
+    func chainParameter(key: String) -> Int? {
+        try? dbPool.read { db in
+            try ChainParameter.filter(ChainParameter.Columns.key == key).fetchOne(db)?.value
+        }
+    }
+
+    func saveChainParameter(key: String, value: Int?) {
+        _ = try! dbPool.write { db in
+            let parameter = ChainParameter(key: key, value: value)
+            try parameter.insert(db)
         }
     }
 

@@ -12,7 +12,7 @@ struct Trc20TransactionResponse: ImmutableMappable {
     let value: BigUInt
 
     public init(map: Map) throws {
-        transactionId = try map.value("transaction_id")
+        transactionId = try map.value("transaction_id", using: HexDataTransform())
         tokenInfo = try map.value("token_info")
         blockTimestamp = try map.value("block_timestamp")
         from = try map.value("from", using: StringAddressTransform())

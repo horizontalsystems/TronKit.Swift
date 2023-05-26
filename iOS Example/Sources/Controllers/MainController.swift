@@ -23,6 +23,11 @@ class MainController: UITabBarController {
             sendNavigation.tabBarItem.title = "Send"
             sendNavigation.tabBarItem.image = UIImage(named: "Send Tab Bar Icon")
             controllers.append(sendNavigation)
+
+            let trc20SendNavigation = UINavigationController(rootViewController: Trc20SendController())
+            trc20SendNavigation.tabBarItem.title = "Trc20 Send"
+            trc20SendNavigation.tabBarItem.image = UIImage(named: "Send Tab Bar Icon")
+            controllers.append(trc20SendNavigation)
         }
 
         let receiveNavigation = UINavigationController(rootViewController: ReceiveController())

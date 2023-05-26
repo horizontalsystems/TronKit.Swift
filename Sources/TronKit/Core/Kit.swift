@@ -9,6 +9,8 @@ public class Kit {
     private let syncer: Syncer
     private let accountInfoManager: AccountInfoManager
     private let transactionManager: TransactionManager
+    private let transactionSender: TransactionSender
+    private let feeProvider: FeeProvider
 
     public let address: Address
     public let network: Network
@@ -16,13 +18,15 @@ public class Kit {
     public let logger: Logger
 
 
-    init(address: Address, network: Network, uniqueId: String, syncer: Syncer, accountInfoManager: AccountInfoManager, transactionManager: TransactionManager, logger: Logger) {
+    init(address: Address, network: Network, uniqueId: String, syncer: Syncer, accountInfoManager: AccountInfoManager, transactionManager: TransactionManager, transactionSender: TransactionSender, feeProvider: FeeProvider, logger: Logger) {
         self.address = address
         self.network = network
         self.uniqueId = uniqueId
         self.accountInfoManager = accountInfoManager
         self.transactionManager = transactionManager
+        self.transactionSender = transactionSender
         self.syncer = syncer
+        self.feeProvider = feeProvider
         self.logger = logger
     }
 
@@ -72,6 +76,36 @@ extension Kit {
         transactionManager.fullTransactions(tagQueries: tagQueries, fromHash: fromHash, limit: limit)
     }
 
+    public func estimateFee(contract: Contract) async throws -> [Fee] {
+        try await feeProvider.estimateFee(contract: contract)
+    }
+
+    public func transferContract(toAddress: Address, value: Int) -> TransferContract {
+        TransferContract(amount: value, ownerAddress: address, toAddress: toAddress)
+    }
+
+    public func transferTrc20TriggerSmartContract(contractAddress: Address, toAddress: Address, amount: BigUInt) -> TriggerSmartContract {
+        let transferMethod = TransferMethod(to: toAddress, value: amount)
+        let data = transferMethod.encodedABI().hs.hex
+        let parameter = ContractMethodHelper.encodedABI(methodId: Data(), arguments: transferMethod.arguments).hs.hex
+
+        return TriggerSmartContract(
+            data: data,
+            ownerAddress: address,
+            contractAddress: contractAddress,
+            callValue: nil,
+            callTokenValue: nil,
+            tokenId: nil,
+            functionSelector: TransferMethod.methodSignature,
+            parameter: parameter
+        )
+    }
+
+    public func send(contract: Contract, signer: Signer, feeLimit: Int? = 0) async throws  {
+        let newTransaction = try await transactionSender.sendTransaction(contract: contract, signer: signer, feeLimit: feeLimit)
+        transactionManager.handle(newTransaction: newTransaction)
+    }
+
     public func start() {
         syncer.start()
     }
@@ -110,7 +144,7 @@ extension Kit {
         let networkManager = NetworkManager(logger: logger)
         let reachabilityManager = ReachabilityManager()
         let databaseDirectoryUrl = try dataDirectoryUrl()
-        let syncerStateStorage = SyncerStateStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "syncer-state-storage")
+        let syncerStorage = SyncerStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "syncer-state-storage")
         let accountInfoStorage = AccountInfoStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "account-info-storage")
 
         let accountInfoManager = AccountInfoManager(storage: accountInfoStorage)
@@ -126,14 +160,20 @@ extension Kit {
         case .shastaTestnet: tronGridUrl = "https://api.shasta.trongrid.io"
         }
         let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: tronGridUrl, auth: nil)
+        let chainParameterManager = ChainParameterManager(tronGridProvider: tronGridProvider, storage: syncerStorage)
+        let feeProvider = FeeProvider(tronGridProvider: tronGridProvider, chainParameterManager: chainParameterManager)
+
         let syncTimer = SyncTimer(reachabilityManager: reachabilityManager, syncInterval: 30)
-        let syncer = Syncer(accountInfoManager: accountInfoManager, transactionManager: transactionManager, syncTimer: syncTimer, tronGridProvider: tronGridProvider, storage: syncerStateStorage, address: address)
+        let syncer = Syncer(accountInfoManager: accountInfoManager, transactionManager: transactionManager, chainParameterManager: chainParameterManager, syncTimer: syncTimer, tronGridProvider: tronGridProvider, storage: syncerStorage, address: address)
+        let transactionSender = TransactionSender(tronGridProvider: tronGridProvider)
 
         let kit = Kit(
             address: address, network: network, uniqueId: uniqueId,
             syncer: syncer,
             accountInfoManager: accountInfoManager,
             transactionManager: transactionManager,
+            transactionSender: transactionSender,
+            feeProvider: feeProvider,
             logger: logger
         )
 
@@ -161,6 +201,12 @@ extension Kit {
     public enum SyncError: Error {
         case notStarted
         case noNetworkConnection
+    }
+
+    public enum SendError: Error {
+        case notSupportedContract
+        case abnormalSend
+        case invalidParameter
     }
 
 }

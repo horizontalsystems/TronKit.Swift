@@ -5,13 +5,22 @@ import HsCryptoKit
 import HsToolKit
 
 public class Signer {
+    private let privateKey: Data
+
+    init(privateKey: Data) {
+        self.privateKey = privateKey
+    }
+
+    func signature(hash: Data) throws -> Data {
+        try Crypto.ellipticSign(hash, privateKey: privateKey)
+    }
 
 }
 
 extension Signer {
 
     public static func instance(seed: Data) throws -> Signer {
-        Signer()
+        Signer(privateKey: try privateKey(seed: seed))
     }
 
     public static func address(seed: Data) throws -> Address {

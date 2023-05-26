@@ -102,18 +102,28 @@ extension TrxAdapter {
         nil
     }
 
-    func estimatedGasLimit(to address: Address, value: Decimal, gasPrice: Int) async throws -> Int {
-        0
+    func transferContract(toAddress: Address, value: Int) -> TransferContract {
+        tronKit.transferContract(toAddress: toAddress, value: value)
+    }
+
+    func transferTrc20TriggerSmartContract(contractAddress: Address, toAddress: Address, value: BigUInt) -> TriggerSmartContract {
+        tronKit.transferTrc20TriggerSmartContract(contractAddress: contractAddress, toAddress: toAddress, amount: value)
+    }
+
+    func estimateFee(contract: Contract) async throws -> [Fee] {
+        try await tronKit.estimateFee(contract: contract)
     }
 
     func transaction(hash: Data) async throws -> FullTransaction {
         try await tronKit.fetchTransaction(hash: hash)
     }
 
-    func send(to: Address, amount: Decimal, gasLimit: Int, gasPrice: Int) async throws {
+    func send(contract: Contract, feeLimit: Int?) async throws {
         guard let signer = signer else {
             throw SendError.noSigner
         }
+
+        try await tronKit.send(contract: contract, signer: signer, feeLimit: feeLimit)
     }
 
 }

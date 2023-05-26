@@ -79,6 +79,7 @@ extension TransactionManager {
                     hash: response.txId,
                     timestamp: response.blockTimestamp,
                     isFailed: response.ret.contains(where: { $0.contractRet != "SUCCESS" }),
+                    blockNumber: response.blockNumber,
                     contractsMap: response.rawData.contract
                 )
         }
@@ -136,6 +137,19 @@ extension TransactionManager {
         fullTransactionsWithTagsSubject.send(fullTransactionsWithTags)
 
         storage.markProcessed()
+    }
+
+    func handle(newTransaction response: CreatedTransactionResponse) {
+        let transaction = Transaction(
+            hash: response.txID,
+            timestamp: response.rawData.timestamp,
+            isFailed: false,
+            blockNumber: nil,
+            contractsMap: response.rawData.contract
+        )
+
+        storage.save(transactions: [transaction], replaceOnConflict: true)
+        process(initial: false)
     }
 
 }

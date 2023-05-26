@@ -21,7 +21,7 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
     public init(map: Map) throws {
         ret = try map.value("ret")
         signature = try map.value("signature")
-        txId = try map.value("txID")
+        txId = try map.value("txID", using: HexDataTransform())
         netUsage = try map.value("net_usage")
         netFee = try map.value("net_fee")
         energyUsage = try map.value("energy_usage")
@@ -72,7 +72,7 @@ struct InternalTransactionResponse: ImmutableMappable, ITransactionResponse {
 
     init(map: ObjectMapper.Map) throws {
         internalTxId = try map.value("internal_tx_id")
-        txId = try map.value("tx_id")
+        txId = try map.value("tx_id", using: HexDataTransform())
         data = try map.value("data")
         blockTimestamp = try map.value("block_timestamp")
         toAddress = try map.value("to_address", using: HexAddressTransform())

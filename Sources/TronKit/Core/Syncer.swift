@@ -5,17 +5,20 @@ class Syncer {
 
     private let accountInfoManager: AccountInfoManager
     private let transactionManager: TransactionManager
+    private let chainParameterManager: ChainParameterManager
     private let syncTimer: SyncTimer
     private let tronGridProvider: TronGridProvider
-    private let storage: SyncerStateStorage
+    private let storage: SyncerStorage
     private let address: Address
 
     @DistinctPublished private(set) var state: SyncState = .notSynced(error: Kit.SyncError.notStarted)
     @DistinctPublished private(set) var lastBlockHeight: Int = 0
 
-    init(accountInfoManager: AccountInfoManager, transactionManager: TransactionManager, syncTimer: SyncTimer, tronGridProvider: TronGridProvider, storage: SyncerStateStorage, address: Address) {
+    init(accountInfoManager: AccountInfoManager, transactionManager: TransactionManager, chainParameterManager: ChainParameterManager,
+         syncTimer: SyncTimer, tronGridProvider: TronGridProvider, storage: SyncerStorage, address: Address) {
         self.accountInfoManager = accountInfoManager
         self.transactionManager = transactionManager
+        self.chainParameterManager = chainParameterManager
         self.syncTimer = syncTimer
         self.tronGridProvider = tronGridProvider
         self.storage = storage
@@ -23,6 +26,12 @@ class Syncer {
 
         syncTimer.delegate = self
         lastBlockHeight = storage.lastBlockHeight ?? 0
+    }
+
+    private func syncChainParameters() {
+        Task { [chainParameterManager] in
+            try await chainParameterManager.sync()
+        }
     }
 
 }
@@ -35,6 +44,7 @@ extension Syncer {
 
     func start() {
         state = .syncing(progress: nil)
+        syncChainParameters()
         syncTimer.start()
     }
 

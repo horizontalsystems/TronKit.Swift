@@ -36,7 +36,7 @@ public struct Address {
     }
 
     public var hex: String {
-        raw.hs.hexString
+        raw.hs.hex
     }
 
     public var base58: String {
