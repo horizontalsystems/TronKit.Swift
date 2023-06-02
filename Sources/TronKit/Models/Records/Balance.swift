@@ -1,7 +1,7 @@
 import GRDB
 import BigInt
 
-class Balances: Record {
+class Balance: Record {
     let id: String
     var balance: BigUInt
 

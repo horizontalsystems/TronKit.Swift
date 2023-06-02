@@ -1,5 +1,6 @@
 import Foundation
 import SwiftProtobuf
+import BigInt
 
 class FeeProvider {
     private let tronGridProvider: TronGridProvider
@@ -17,12 +18,12 @@ class FeeProvider {
         ]
     }
 
-    private func isAccountActive(address: Address) async throws -> Bool {
+    func isAccountActive(address: Address) async throws -> Bool {
         do {
             _ = try await tronGridProvider.fetchAccountInfo(address: address.base58)
             return true
         } catch let error as TronGridProvider.RequestError {
-            guard case .failedToFetchAccountInfo = error  else {
+            guard case .failedToFetchAccountInfo = error else {
                 throw error
             }
 
@@ -50,20 +51,19 @@ extension FeeProvider {
                 }
 
             case let contract as TriggerSmartContract:
-                guard let functionSelector = contract.functionSelector,
-                      let parameter = contract.parameter else {
-                    throw Kit.SendError.invalidParameter
-                }
-
-                let energyRequired = try await tronGridProvider.estimateEnergy(
-                    ownerAddress: contract.ownerAddress.hex,
-                    contractAddress: contract.contractAddress.hex,
-                    functionSelector: functionSelector,
-                    parameter: parameter
+                let energyPrice = chainParameterManager.energyFee
+                let energyRequired = try await tronGridProvider.fetch(
+                    rpc: EstimateGasJsonRpc(
+                        from: contract.ownerAddress,
+                        to: contract.contractAddress,
+                        amount: contract.callValue.flatMap { BigUInt($0) },
+                        gasPrice: 1,
+                        data: contract.data.hs.hexData!
+                    )
                 )
 
-                feeLimit = Int64(energyRequired * chainParameterManager.energyFee)
-                fees.append(.energy(required: energyRequired, price: chainParameterManager.energyFee))
+                feeLimit = Int64(energyRequired * energyPrice)
+                fees.append(.energy(required: energyRequired, price: energyPrice))
 
             default: throw FeeProvider.FeeError.notSupportedContract
         }

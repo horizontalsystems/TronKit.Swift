@@ -43,7 +43,6 @@ extension Syncer {
     }
 
     func start() {
-        state = .syncing(progress: nil)
         syncChainParameters()
         syncTimer.start()
     }
@@ -68,7 +67,6 @@ extension Syncer: ISyncTimerDelegate {
     func didUpdate(state: SyncTimer.State) {
         switch state {
         case .ready:
-            self.state = .syncing(progress: nil)
             sync()
         case .notReady(let error):
             tasks = Set()
@@ -79,6 +77,11 @@ extension Syncer: ISyncTimerDelegate {
     func sync() {
         Task { [weak self, lastBlockHeight, tronGridProvider, address, storage] in
             do {
+                if case .syncing = self?.state {
+                    return
+                }
+                self?.state = .syncing(progress: nil)
+
                 let address = address.base58
                 let newLastBlockHeight = try await tronGridProvider.fetch(rpc: BlockNumberJsonRpc())
 
@@ -132,7 +135,13 @@ extension Syncer: ISyncTimerDelegate {
                 self?.transactionManager.process(initial: lastTxTimestamp == 0 || lastTrc20TxTimestamp == 0)
                 self?.state = .synced
             } catch {
-                self?.state = .notSynced(error: error)
+                if let requestError = error as? TronGridProvider.RequestError,
+                   case .failedToFetchAccountInfo = requestError {
+                    self?.accountInfoManager.handleInactiveAccount()
+                    self?.state = .synced
+                } else {
+                    self?.state = .notSynced(error: error)
+                }
             }
         }.store(in: &tasks)
     }

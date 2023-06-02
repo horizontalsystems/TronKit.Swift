@@ -21,6 +21,7 @@ class TransactionStorage {
                 t.column(Transaction.Columns.timestamp.name, .integer).notNull()
                 t.column(Transaction.Columns.isFailed.name, .boolean).notNull()
                 t.column(Transaction.Columns.blockNumber.name, .integer)
+                t.column(Transaction.Columns.confirmed.name, .boolean)
                 t.column(Transaction.Columns.processed.name, .boolean).notNull()
                 t.column(Transaction.Columns.fee.name, .integer)
                 t.column(Transaction.Columns.netUsage.name, .integer)

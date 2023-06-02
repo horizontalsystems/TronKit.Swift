@@ -44,6 +44,10 @@ extension Kit {
         syncer.state
     }
 
+    public var accountInactive: Bool {
+        accountInfoManager.accountInactive
+    }
+
     public var trxBalance: BigUInt {
         accountInfoManager.trxBalance
     }
@@ -68,6 +72,14 @@ extension Kit {
         transactionManager.fullTransactionsPublisher
     }
 
+    public func trc20Balance(contractAddress: Address) -> BigUInt {
+        accountInfoManager.trc20Balance(contractAddress: contractAddress)
+    }
+
+    public func trc20BalancePublisher(contractAddress: Address) -> AnyPublisher<BigUInt, Never> {
+        accountInfoManager.trc20BalancePublisher(contractAddress: contractAddress)
+    }
+
     public func transactionsPublisher(tagQueries: [TransactionTagQuery]) -> AnyPublisher<[FullTransaction], Never> {
         transactionManager.fullTransactionsPublisher(tagQueries: tagQueries)
     }
@@ -78,6 +90,10 @@ extension Kit {
 
     public func estimateFee(contract: Contract) async throws -> [Fee] {
         try await feeProvider.estimateFee(contract: contract)
+    }
+
+    public func decorate(contract: Contract) -> TransactionDecoration? {
+        transactionManager.decorate(contract: contract)
     }
 
     public func transferContract(toAddress: Address, value: Int) -> TransferContract {
@@ -104,6 +120,10 @@ extension Kit {
     public func send(contract: Contract, signer: Signer, feeLimit: Int? = 0) async throws  {
         let newTransaction = try await transactionSender.sendTransaction(contract: contract, signer: signer, feeLimit: feeLimit)
         transactionManager.handle(newTransaction: newTransaction)
+    }
+
+    public func accountInactive(address: Address) async throws -> Bool {
+        try await feeProvider.isAccountActive(address: address)
     }
 
     public func start() {
@@ -144,12 +164,11 @@ extension Kit {
         let networkManager = NetworkManager(logger: logger)
         let reachabilityManager = ReachabilityManager()
         let databaseDirectoryUrl = try dataDirectoryUrl()
-        let syncerStorage = SyncerStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "syncer-state-storage")
-        let accountInfoStorage = AccountInfoStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "account-info-storage")
+        let syncerStorage = SyncerStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "syncer-state-storage-\(uniqueId)")
+        let accountInfoStorage = AccountInfoStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "account-info-storage-\(uniqueId)")
+        let transactionStorage = TransactionStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "transactions-storage-\(uniqueId)")
 
         let accountInfoManager = AccountInfoManager(storage: accountInfoStorage)
-
-        let transactionStorage = TransactionStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "transactions-storage")
         let decorationManager = DecorationManager(userAddress: address, storage: transactionStorage)
         let transactionManager = TransactionManager(userAddress: address, storage: transactionStorage, decorationManager: decorationManager)
 
@@ -157,7 +176,7 @@ extension Kit {
         switch network {
         case .mainNet: tronGridUrl = "https://api.trongrid.io/"
         case .nileTestnet: tronGridUrl = "https://nile.trongrid.io/"
-        case .shastaTestnet: tronGridUrl = "https://api.shasta.trongrid.io"
+        case .shastaTestnet: tronGridUrl = "https://api.shasta.trongrid.io/"
         }
         let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: tronGridUrl, auth: nil)
         let chainParameterManager = ChainParameterManager(tronGridProvider: tronGridProvider, storage: syncerStorage)

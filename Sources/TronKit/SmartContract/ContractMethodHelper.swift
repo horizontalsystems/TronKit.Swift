@@ -32,7 +32,7 @@ public class ContractMethodHelper {
                 case let argument as String:
                     data += pad(data: argument.hs.hexData ?? Data())
                 case let argument as Address:
-                    data += pad(data: argument.raw)
+                    data += pad(data: argument.raw.suffix(from: 1))
                 case let argument as [Address]:
                     data += pad(data: BigUInt(arguments.count * 32 + arraysData.count).serialize())
                     arraysData += encode(array: argument.map { $0.raw })

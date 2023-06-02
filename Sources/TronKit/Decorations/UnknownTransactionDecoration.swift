@@ -1,11 +1,13 @@
+import Foundation
 import BigInt
 
 open class UnknownTransactionDecoration: TransactionDecoration {
-    private let toAddress: Address?
+    public let toAddress: Address?
     public let fromAddress: Address?
-    private let value: Int?
-    private let tokenValue: Int?
-    private let tokenId: Int?
+    public let data: Data?
+    public let value: Int?
+    public let tokenValue: Int?
+    public let tokenId: Int?
 
     public let internalTransactions: [InternalTransaction]
     public let events: [Event]
@@ -13,6 +15,7 @@ open class UnknownTransactionDecoration: TransactionDecoration {
     init(contract: TriggerSmartContract?, internalTransactions: [InternalTransaction], events: [Event]) {
         self.fromAddress = contract?.ownerAddress
         self.toAddress = contract?.contractAddress
+        self.data = contract?.data.hs.hexData
         self.value = contract?.callValue
         self.tokenValue = contract?.callTokenValue
         self.tokenId = contract?.tokenId

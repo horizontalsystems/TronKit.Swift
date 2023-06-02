@@ -48,6 +48,10 @@ extension TransactionManager {
         return decorationManager.decorate(transactions: transactions)
     }
 
+    func decorate(contract: Contract) -> TransactionDecoration? {
+        decorationManager.decorateTransaction(contract: contract)
+    }
+
     func save(transactionResponses: [ITransactionResponse]) {
         let internalTransactionRecords = transactionResponses.compactMap { response -> InternalTransaction? in
             guard let response = response as? InternalTransactionResponse else {
@@ -65,7 +69,7 @@ extension TransactionManager {
         }
 
         var transactionRecords = internalTransactionRecords.map { internalTx in
-            Transaction(hash: internalTx.transactionHash, timestamp: internalTx.timestamp, isFailed: false)
+            Transaction(hash: internalTx.transactionHash, timestamp: internalTx.timestamp, isFailed: false, confirmed: true)
         }
         storage.save(transactions: transactionRecords, replaceOnConflict: false)
         storage.save(internalTransactions: internalTransactionRecords)
@@ -80,6 +84,13 @@ extension TransactionManager {
                     timestamp: response.blockTimestamp,
                     isFailed: response.ret.contains(where: { $0.contractRet != "SUCCESS" }),
                     blockNumber: response.blockNumber,
+                    confirmed: true,
+                    fee: response.ret.first?.fee,
+                    netUsage: response.netUsage,
+                    netFee: response.netFee,
+                    energyUsage: response.energyUsage,
+                    energyFee: response.energyFee,
+                    energyUsageTotal: response.energyUsageTotal,
                     contractsMap: response.rawData.contract
                 )
         }
@@ -104,7 +115,7 @@ extension TransactionManager {
         }
 
         let transactionRecords = trc20TransferRecords.map { transfer in
-            Transaction(hash: transfer.transactionHash, timestamp: transfer.blockTimestamp, isFailed: false)
+            Transaction(hash: transfer.transactionHash, timestamp: transfer.blockTimestamp, isFailed: false, confirmed: true)
         }
 
         storage.save(transactions: transactionRecords, replaceOnConflict: false)
@@ -132,11 +143,10 @@ extension TransactionManager {
         }
 
         storage.save(tags: tagRecords)
+        storage.markProcessed()
 
         fullTransactionsSubject.send((fullTransactions, initial))
         fullTransactionsWithTagsSubject.send(fullTransactionsWithTags)
-
-        storage.markProcessed()
     }
 
     func handle(newTransaction response: CreatedTransactionResponse) {
@@ -145,6 +155,7 @@ extension TransactionManager {
             timestamp: response.rawData.timestamp,
             isFailed: false,
             blockNumber: nil,
+            confirmed: false,
             contractsMap: response.rawData.contract
         )
 

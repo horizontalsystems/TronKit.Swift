@@ -37,7 +37,7 @@ class TronGridProvider {
     }
 
     private func extensionApiFetch(path: String, parameters: Parameters) async throws -> (data: [[String: Any]], meta: [String: Any]) {
-        let urlString = "\(baseUrl)/\(path)"
+        let urlString = "\(baseUrl)\(path)"
 
         let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: parameters, responseCacherBehavior: .doNotCache)
 
@@ -135,6 +135,7 @@ extension TronGridProvider {
     func fetchTransactions(address: String, minTimestamp: Int, fingerprint: String?) async throws -> (transactions: [ITransactionResponse], fingerprint: String?, completed: Bool) {
         let path = "v1/accounts/\(address)/\(ApiPath.transactions.rawValue)"
         var parameters: Parameters = [
+            "only_confirmed": true,
             "order_by": "block_timestamp,asc",
             "limit": pageLimit,
             "min_timestamp": minTimestamp
@@ -160,6 +161,7 @@ extension TronGridProvider {
     func fetchTrc20Transactions(address: String, minTimestamp: Int, fingerprint: String?) async throws -> (transactions: [Trc20TransactionResponse], fingerprint: String?, completed: Bool) {
         let path = "v1/accounts/\(address)/\(ApiPath.transactionsTrc20.rawValue)"
         var parameters: Parameters = [
+            "only_confirmed": true,
             "order_by": "block_timestamp,asc",
             "limit": pageLimit,
             "min_timestamp": minTimestamp

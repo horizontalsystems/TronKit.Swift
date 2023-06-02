@@ -19,10 +19,10 @@ public class NativeTransactionDecoration: TransactionDecoration {
 
             case let contract as TransferAssetContract:
                 if contract.ownerAddress == userAddress {
-                    tags.append(TransactionTag(type: .outgoing, protocol: .native))
+                    tags.append(TransactionTag(type: .outgoing, protocol: .trc10))
                 }
                 if contract.toAddress == userAddress {
-                    tags.append(TransactionTag(type: .incoming, protocol: .native))
+                    tags.append(TransactionTag(type: .incoming, protocol: .trc10))
                 }
 
             default: ()

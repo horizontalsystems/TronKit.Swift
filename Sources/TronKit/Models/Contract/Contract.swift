@@ -2,12 +2,13 @@ import Foundation
 import ObjectMapper
 
 public protocol Contract: ImmutableMappable {
-    static var type: String { get }
+    var label: String { get }
     func ownTransaction(ownAddress: Address) -> Bool
 }
 
 public struct AccountCreateContract: Contract {
     public static let type = "AccountCreateContract"
+    public var label = "Create Account"
 
     let ownerAddress: Address
     let accountAddress: Address
@@ -26,6 +27,7 @@ public struct AccountCreateContract: Contract {
 
 public struct TransferContract: Contract {
     public static let type = "TransferContract"
+    public var label = "Transfer TRX"
 
     public let amount: Int
     public let ownerAddress: Address
@@ -50,6 +52,7 @@ public struct TransferContract: Contract {
 
 public struct TransferAssetContract: Contract {
     public static let type = "TransferAssetContract"
+    public var label = "Transfer TRC10 Asset"
 
     public let amount: Int
     public let assetName: String
@@ -70,6 +73,7 @@ public struct TransferAssetContract: Contract {
 
 public struct VoteWitnessContract: Contract {
     public static let type = "VoteWitnessContract"
+    public var label = "Vote Witness"
 
     public let ownerAddress: Address
     public let votes: [Vote]
@@ -96,6 +100,7 @@ public struct VoteWitnessContract: Contract {
 
 public struct WitnessCreateContract: Contract {
     public static let type = "WitnessCreateContract"
+    public var label = "Witness Create"
 
     public let ownerAddress: Address
     public let url: String
@@ -112,6 +117,7 @@ public struct WitnessCreateContract: Contract {
 
 public struct AssetIssueContract: Contract {
     public static let type = "AssetIssueContract"
+    public var label = "Asset Issue"
 
     public struct FrozenSupply: ImmutableMappable {
         public let frozenAmount: Int
@@ -170,6 +176,7 @@ public struct AssetIssueContract: Contract {
 
 public struct WitnessUpdateContract: Contract {
     public static let type = "WitnessUpdateContract"
+    public var label = "Witness Update"
     public let ownerAddress: Address
     public let updateUrl: String
 
@@ -185,6 +192,7 @@ public struct WitnessUpdateContract: Contract {
 
 public struct ParticipateAssetIssueContract: Contract {
     public static let type = "ParticipateAssetIssueContract"
+    public var label = "Participate Asset Issue"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -204,6 +212,7 @@ public struct ParticipateAssetIssueContract: Contract {
 
 public struct AccountUpdateContract: Contract {
     public static let type = "AccountUpdateContract"
+    public var label = "Account Update"
 
     public let ownerAddress: Address
     public let accountName: String
@@ -220,6 +229,7 @@ public struct AccountUpdateContract: Contract {
 
 public struct FreezeBalanceContract: Contract {
     public static let type = "FreezeBalanceContract"
+    public var label = "Freeze Balance"
 
     public let ownerAddress: Address
     public let frozenBalance: Int
@@ -242,6 +252,7 @@ public struct FreezeBalanceContract: Contract {
 
 public struct UnfreezeBalanceContract: Contract {
     public static let type = "UnfreezeBalanceContract"
+    public var label = "Unfreeze Balance"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -259,6 +270,7 @@ public struct UnfreezeBalanceContract: Contract {
 
 public struct WithdrawBalanceContract: Contract {
     public static let type = "WithdrawBalanceContract"
+    public var label = "Withdraw Balance"
 
     let ownerAddress: Address
 
@@ -273,6 +285,7 @@ public struct WithdrawBalanceContract: Contract {
 
 public struct UnfreezeAssetContract: Contract {
     public static let type = "UnfreezeAssetContract"
+    public var label = "Unfreeze Asset"
 
     public let ownerAddress: Address
 
@@ -287,6 +300,7 @@ public struct UnfreezeAssetContract: Contract {
 
 public struct UpdateAssetContract: Contract {
     public static let type = "UpdateAssetContract"
+    public var label = "Update Asset"
 
     public let ownerAddress: Address
     public let description: String
@@ -309,6 +323,7 @@ public struct UpdateAssetContract: Contract {
 
 public struct ProposalCreateContract: Contract {
     public static let type = "ProposalCreateContract"
+    public var label = "Proposal Create"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -322,6 +337,7 @@ public struct ProposalCreateContract: Contract {
 
 public struct ProposalApproveContract: Contract {
     public static let type = "ProposalApproveContract"
+    public var label = "Proposal Approve"
 
     public let ownerAddress: Address
     public let proposalId: Int
@@ -340,6 +356,7 @@ public struct ProposalApproveContract: Contract {
 
 public struct ProposalDeleteContract: Contract {
     public static let type = "ProposalDeleteContract"
+    public var label = "Proposal Delete"
 
     public let ownerAddress: Address
     public let proposalId: Int
@@ -356,6 +373,7 @@ public struct ProposalDeleteContract: Contract {
 
 public struct SetAccountIdContract: Contract {
     public static let type = "SetAccountIdContract"
+    public var label = "Set Account Id"
 
     public let ownerAddress: Address
     public let accountId: String
@@ -372,6 +390,7 @@ public struct SetAccountIdContract: Contract {
 
 public struct CreateSmartContract: Contract {
     public static let type = "CreateSmartContract"
+    public var label = "Create SmartContract"
 
     public let ownerAddress: Address
 
@@ -386,6 +405,7 @@ public struct CreateSmartContract: Contract {
 
 public struct TriggerSmartContract: Contract {
     public static let type = "TriggerSmartContract"
+    public var label = "Trigger SmartContract"
 
     let data: String
     let ownerAddress: Address
@@ -425,6 +445,7 @@ public struct TriggerSmartContract: Contract {
 
 public struct UpdateSettingContract: Contract {
     public static let type = "UpdateSettingContract"
+    public var label = "Update Setting"
 
     public let ownerAddress: Address
     public let contractAddress: Address
@@ -443,6 +464,7 @@ public struct UpdateSettingContract: Contract {
 
 public struct ExchangeCreateContract: Contract {
     public static let type = "ExchangeCreateContract"
+    public var label = "Exchange Create"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -456,6 +478,7 @@ public struct ExchangeCreateContract: Contract {
 
 public struct ExchangeInjectContract: Contract {
     public static let type = "ExchangeInjectContract"
+    public var label = "Exchange Inject"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -469,6 +492,7 @@ public struct ExchangeInjectContract: Contract {
 
 public struct ExchangeWithdrawContract: Contract {
     public static let type = "ExchangeWithdrawContract"
+    public var label = "Exchange Withdraw"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -482,6 +506,7 @@ public struct ExchangeWithdrawContract: Contract {
 
 public struct ExchangeTransactionContract: Contract {
     public static let type = "ExchangeTransactionContract"
+    public var label = "Exchange Transaction"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -495,6 +520,7 @@ public struct ExchangeTransactionContract: Contract {
 
 public struct ClearABIContract: Contract {
     public static let type = "ClearABIContract"
+    public var label = "Clear ABI"
 
     public let ownerAddress: Address
     public let contractAddress: Address
@@ -511,6 +537,7 @@ public struct ClearABIContract: Contract {
 
 public struct UpdateBrokerageContract: Contract {
     public static let type = "UpdateBrokerageContract"
+    public var label = "Update Brokerage"
 
     public let ownerAddress: Address
     public let brokerage: Int
@@ -527,6 +554,7 @@ public struct UpdateBrokerageContract: Contract {
 
 public struct UpdateEnergyLimitContract: Contract {
     public static let type = "UpdateEnergyLimitContract"
+    public var label = "Update Energy Limit"
 
     public let ownerAddress: Address
     public let contractAddress: Address
@@ -546,8 +574,9 @@ public struct UpdateEnergyLimitContract: Contract {
 
 public struct FreezeBalanceV2Contract: Contract {
     public static let type = "FreezeBalanceV2Contract"
+    public var label = "Freeze Balance V2"
 
-    let resource: String
+    let resource: String?
     let frozenBalance: Int
     let ownerAddress: Address
 
@@ -564,6 +593,7 @@ public struct FreezeBalanceV2Contract: Contract {
 
 public struct UnfreezeBalanceV2Contract: Contract {
     public static let type = "UnfreezeBalanceV2Contract"
+    public var label = "Unfreeze Balance V2"
 
     public let ownerAddress: Address
     public let unfreezeBalance: Int
@@ -582,6 +612,7 @@ public struct UnfreezeBalanceV2Contract: Contract {
 
 public struct WithdrawExpireUnfreezeContract: Contract {
     public static let type = "WithdrawExpireUnfreezeContract"
+    public var label = "Withdraw Expire Unfreeze"
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
@@ -595,6 +626,7 @@ public struct WithdrawExpireUnfreezeContract: Contract {
 
 public struct DelegateResourceContract: Contract {
     public static let type = "DelegateResourceContract"
+    public var label = "Delegate Resource"
 
     public let ownerAddress: Address
     public let resource: String
@@ -617,6 +649,7 @@ public struct DelegateResourceContract: Contract {
 
 public struct UnDelegateResourceContract: Contract {
     public static let type = "UnDelegateResourceContract"
+    public var label = "Undelegate Resource"
 
     public let ownerAddress: Address
     public let resource: String
@@ -636,7 +669,8 @@ public struct UnDelegateResourceContract: Contract {
 }
 
 public struct UnknownContract: Contract {
-    public static let type = ""
+    public static let type = "UnknownContract"
+    public var label = "Unknown"
 
     public let data: Data
 

@@ -5,6 +5,7 @@ import HsExtensions
 
 public struct Address {
     public let raw: Data
+    public let base58: String
 
     public init(raw: Data) throws {
         var prefixedRaw = raw
@@ -15,6 +16,9 @@ public struct Address {
 
         try Address.validate(data: prefixedRaw)
         self.raw = prefixedRaw
+
+        let checksum = Crypto.doubleSha256(prefixedRaw).prefix(4)
+        self.base58 = Data(prefixedRaw + checksum).hs.encodeBase58
     }
 
     public init(address: String) throws {
@@ -37,11 +41,6 @@ public struct Address {
 
     public var hex: String {
         raw.hs.hex
-    }
-
-    public var base58: String {
-        let checksum = Crypto.doubleSha256(raw).prefix(4)
-        return Data(raw + checksum).hs.encodeBase58
     }
 
 }

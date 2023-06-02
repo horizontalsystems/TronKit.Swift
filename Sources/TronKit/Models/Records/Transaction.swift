@@ -7,6 +7,7 @@ public class Transaction: Record {
     public let timestamp: Int
     public var isFailed: Bool
     public let blockNumber: Int?
+    public let confirmed: Bool
     public let processed: Bool
 
     public let fee: Int?
@@ -31,7 +32,7 @@ public class Transaction: Record {
         contract.flatMap { $0.ownTransaction(ownAddress: ownAddress) } ?? false
     }
 
-    public init(hash: Data, timestamp: Int, isFailed: Bool, blockNumber: Int? = nil,
+    public init(hash: Data, timestamp: Int, isFailed: Bool, blockNumber: Int? = nil, confirmed: Bool,
                 fee: Int? = nil, netUsage: Int? = nil, netFee: Int? = nil,
                 energyUsage: Int? = nil, energyFee: Int? = nil, energyUsageTotal: Int? = nil,
                 contractsMap: Any? = nil) {
@@ -39,6 +40,7 @@ public class Transaction: Record {
         self.timestamp = timestamp
         self.isFailed = isFailed
         self.blockNumber = blockNumber
+        self.confirmed = confirmed
         self.processed = false
 
         self.fee = fee
@@ -67,6 +69,7 @@ public class Transaction: Record {
         case timestamp
         case isFailed
         case blockNumber
+        case confirmed
         case processed
         case fee
         case netUsage
@@ -82,6 +85,7 @@ public class Transaction: Record {
         timestamp = row[Columns.timestamp]
         isFailed = row[Columns.isFailed]
         blockNumber = row[Columns.blockNumber]
+        confirmed = row[Columns.confirmed]
         processed = row[Columns.processed]
         fee = row[Columns.fee]
         netUsage = row[Columns.netUsage]
@@ -99,6 +103,7 @@ public class Transaction: Record {
         container[Columns.timestamp] = timestamp
         container[Columns.isFailed] = isFailed
         container[Columns.blockNumber] = blockNumber
+        container[Columns.confirmed] = confirmed
         container[Columns.processed] = processed
         container[Columns.fee] = fee
         container[Columns.netUsage] = netUsage
