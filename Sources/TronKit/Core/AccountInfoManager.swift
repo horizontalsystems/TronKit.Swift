@@ -16,7 +16,7 @@ class AccountInfoManager {
         storage.trxBalance ?? 0
     }
 
-    var accountInactive: Bool = false
+    var accountActive: Bool = true
 
 }
 
@@ -35,7 +35,7 @@ extension AccountInfoManager {
     }
 
     func handle(accountInfoResponse: AccountInfoResponse) {
-        accountInactive = false
+        accountActive = true
         let trxBalance = BigUInt(accountInfoResponse.balance)
         storage.save(trxBalance: trxBalance)
         trxBalanceSubject.send(trxBalance)
@@ -48,7 +48,7 @@ extension AccountInfoManager {
     }
 
     func handleInactiveAccount() {
-        accountInactive = true
+        accountActive = false
         trxBalanceSubject.send(BigUInt.zero)
     }
 

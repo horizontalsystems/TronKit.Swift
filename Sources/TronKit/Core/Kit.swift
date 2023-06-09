@@ -44,8 +44,8 @@ extension Kit {
         syncer.state
     }
 
-    public var accountInactive: Bool {
-        accountInfoManager.accountInactive
+    public var accountActive: Bool {
+        accountInfoManager.accountActive
     }
 
     public var trxBalance: BigUInt {
@@ -122,7 +122,7 @@ extension Kit {
         transactionManager.handle(newTransaction: newTransaction)
     }
 
-    public func accountInactive(address: Address) async throws -> Bool {
+    public func accountActive(address: Address) async throws -> Bool {
         try await feeProvider.isAccountActive(address: address)
     }
 
@@ -157,7 +157,7 @@ extension Kit {
         }
     }
 
-    public static func instance(address: Address, network: Network, walletId: String, minLogLevel: Logger.Level = .error) throws -> Kit {
+    public static func instance(address: Address, network: Network, walletId: String, apiKey: String?, minLogLevel: Logger.Level = .error) throws -> Kit {
         let logger = Logger(minLogLevel: minLogLevel)
         let uniqueId = "\(walletId)-\(network.rawValue)"
 
@@ -172,13 +172,7 @@ extension Kit {
         let decorationManager = DecorationManager(userAddress: address, storage: transactionStorage)
         let transactionManager = TransactionManager(userAddress: address, storage: transactionStorage, decorationManager: decorationManager)
 
-        let tronGridUrl: String
-        switch network {
-        case .mainNet: tronGridUrl = "https://api.trongrid.io/"
-        case .nileTestnet: tronGridUrl = "https://nile.trongrid.io/"
-        case .shastaTestnet: tronGridUrl = "https://api.shasta.trongrid.io/"
-        }
-        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: tronGridUrl, auth: nil)
+        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: providerUrl(network: network), apiKey: apiKey)
         let chainParameterManager = ChainParameterManager(tronGridProvider: tronGridProvider, storage: syncerStorage)
         let feeProvider = FeeProvider(tronGridProvider: tronGridProvider, chainParameterManager: chainParameterManager)
 
@@ -201,6 +195,13 @@ extension Kit {
         return kit
     }
 
+    public static func call(networkManager: NetworkManager, network: Network, contractAddress: Address, data: Data, apiKey: String?) async throws -> Data {
+        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: providerUrl(network: network), apiKey: apiKey)
+        let rpc = CallJsonRpc(contractAddress: contractAddress, data: data)
+
+        return try await tronGridProvider.fetch(rpc: rpc)
+    }
+
     private static func dataDirectoryUrl() throws -> URL {
         let fileManager = FileManager.default
 
@@ -211,6 +212,14 @@ extension Kit {
         try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
 
         return url
+    }
+
+    private static func providerUrl(network: Network) -> String {
+        switch network {
+            case .mainNet: return "https://api.trongrid.io/"
+            case .nileTestnet: return "https://nile.trongrid.io/"
+            case .shastaTestnet: return "https://api.shasta.trongrid.io/"
+        }
     }
 
 }

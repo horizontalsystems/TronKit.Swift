@@ -43,6 +43,10 @@ public struct Address {
         raw.hs.hex
     }
 
+    public var nonPrefixed: Data {
+        raw.suffix(from: 1)
+    }
+
 }
 
 extension Address {

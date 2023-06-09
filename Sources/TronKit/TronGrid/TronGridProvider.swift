@@ -11,14 +11,14 @@ class TronGridProvider {
     private var currentRpcId = 0
     private let pageLimit = 200
 
-    init(networkManager: NetworkManager, baseUrl: String, auth: String?) {
+    init(networkManager: NetworkManager, baseUrl: String, apiKey: String?) {
         self.networkManager = networkManager
         self.baseUrl = baseUrl
 
         var headers = HTTPHeaders()
 
-        if let auth = auth {
-            headers.add(.authorization(username: "", password: auth))
+        if let apiKey = apiKey {
+            headers.add(.init(name: "TRON-PRO-API-KEY", value: apiKey))
         }
 
         self.headers = headers
@@ -39,7 +39,7 @@ class TronGridProvider {
     private func extensionApiFetch(path: String, parameters: Parameters) async throws -> (data: [[String: Any]], meta: [String: Any]) {
         let urlString = "\(baseUrl)\(path)"
 
-        let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: parameters, responseCacherBehavior: .doNotCache)
+        let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: parameters, headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
             throw RequestError.invalidResponse
@@ -63,7 +63,7 @@ class TronGridProvider {
     private func requestNodeApiFetch(path: String, parameters: Parameters) async throws -> [String: Any] {
         let urlString = "\(baseUrl)\(path)"
 
-        let json = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, responseCacherBehavior: .doNotCache)
+        let json = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
             throw RequestError.invalidResponse
