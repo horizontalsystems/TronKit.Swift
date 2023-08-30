@@ -10,6 +10,7 @@ class Syncer {
     private let tronGridProvider: TronGridProvider
     private let storage: SyncerStorage
     private let address: Address
+    private var syncing: Bool = false
 
     @DistinctPublished private(set) var state: SyncState = .notSynced(error: Kit.SyncError.notStarted)
     @DistinctPublished private(set) var lastBlockHeight: Int = 0
@@ -31,6 +32,14 @@ class Syncer {
     private func syncChainParameters() {
         Task { [chainParameterManager] in
             try await chainParameterManager.sync()
+        }
+    }
+
+    private func set(state: SyncState) {
+        self.state = state
+
+        if case .syncing = state {} else {
+            syncing = false
         }
     }
 
@@ -67,28 +76,29 @@ extension Syncer: ISyncTimerDelegate {
     func didUpdate(state: SyncTimer.State) {
         switch state {
         case .ready:
+            set(state: .syncing(progress: nil))
             sync()
         case .notReady(let error):
             tasks = Set()
-            self.state = .notSynced(error: error)
+            set(state: .notSynced(error: error))
         }
     }
 
     func sync() {
         Task { [weak self, lastBlockHeight, tronGridProvider, address, storage] in
             do {
-                if case .syncing = self?.state {
+                guard let syncer = self, !syncer.syncing else {
                     return
                 }
-                self?.state = .syncing(progress: nil)
+                syncer.syncing = true
 
                 let address = address.base58
                 let newLastBlockHeight = try await tronGridProvider.fetch(rpc: BlockNumberJsonRpc())
 
                 guard newLastBlockHeight != lastBlockHeight else {
+                    self?.set(state: .synced)
                     return
                 }
-
                 storage.save(lastBlockHeight: newLastBlockHeight)
                 self?.lastBlockHeight = newLastBlockHeight
 
@@ -133,14 +143,14 @@ extension Syncer: ISyncTimerDelegate {
                 } while !completed
 
                 self?.transactionManager.process(initial: lastTxTimestamp == 0 || lastTrc20TxTimestamp == 0)
-                self?.state = .synced
+                self?.set(state: .synced)
             } catch {
                 if let requestError = error as? TronGridProvider.RequestError,
                    case .failedToFetchAccountInfo = requestError {
                     self?.accountInfoManager.handleInactiveAccount()
-                    self?.state = .synced
+                    self?.set(state: .synced)
                 } else {
-                    self?.state = .notSynced(error: error)
+                    self?.set(state: .notSynced(error: error))
                 }
             }
         }.store(in: &tasks)
