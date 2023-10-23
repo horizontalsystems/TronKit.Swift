@@ -25,6 +25,7 @@ class Manager {
                 address: address,
                 network: configuration.network,
                 walletId: "walletId",
+                apiKey: nil,
                 minLogLevel: configuration.minLogLevel
         )
 

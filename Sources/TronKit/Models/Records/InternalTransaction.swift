@@ -33,7 +33,7 @@ public class InternalTransaction: Record {
         case internalTxId
     }
 
-    required init(row: Row) {
+    required init(row: Row) throws {
         transactionHash = row[Columns.transactionHash]
         timestamp = row[Columns.timestamp]
         from = row[Columns.from]
@@ -41,7 +41,7 @@ public class InternalTransaction: Record {
         value = row[Columns.value]
         internalTxId = row[Columns.internalTxId]
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     override public func encode(to container: inout PersistenceContainer) {

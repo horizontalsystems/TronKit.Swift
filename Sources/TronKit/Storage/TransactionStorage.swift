@@ -155,8 +155,8 @@ extension TransactionStorage {
                       """
 
             let rows = try Row.fetchAll(db.makeStatement(sql: sql), arguments: StatementArguments(arguments))
-            return rows.map { row -> Transaction in
-                Transaction(row: row)
+            return try rows.map { row -> Transaction in
+                try Transaction(row: row)
             }
         }
     }

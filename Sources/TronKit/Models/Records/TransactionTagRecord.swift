@@ -23,7 +23,7 @@ class TransactionTagRecord: Record {
         case contractAddress
     }
 
-    required init(row: Row) {
+    required init(row: Row) throws {
         transactionHash = row[Columns.transactionHash]
         tag = TransactionTag(
             type: row[Columns.type],
@@ -31,7 +31,7 @@ class TransactionTagRecord: Record {
             contractAddress: row[Columns.contractAddress]
         )
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     override func encode(to container: inout PersistenceContainer) {

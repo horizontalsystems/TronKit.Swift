@@ -19,10 +19,10 @@ class LastBlockHeight: Record {
         case height
     }
 
-    required init(row: Row) {
+    required init(row: Row) throws {
         height = row[Columns.height]
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     override func encode(to container: inout PersistenceContainer) {

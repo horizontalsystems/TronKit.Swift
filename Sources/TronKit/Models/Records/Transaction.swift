@@ -80,7 +80,7 @@ public class Transaction: Record {
         case contractsRaw
     }
 
-    required init(row: Row) {
+    required init(row: Row) throws {
         hash = row[Columns.hash]
         timestamp = row[Columns.timestamp]
         isFailed = row[Columns.isFailed]
@@ -95,7 +95,7 @@ public class Transaction: Record {
         energyUsageTotal = row[Columns.energyUsageTotal]
         contractsRaw = row[Columns.contractsRaw]
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     public override func encode(to container: inout PersistenceContainer) {
