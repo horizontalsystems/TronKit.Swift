@@ -20,11 +20,11 @@ class TransactionSyncTimestamp: Record {
         case lastTransactionTimestamp
     }
 
-    required init(row: Row) {
+    required init(row: Row) throws {
         apiPath = row[Columns.apiPath]
         lastTransactionTimestamp = row[Columns.lastTransactionTimestamp]
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     public override func encode(to container: inout PersistenceContainer) {

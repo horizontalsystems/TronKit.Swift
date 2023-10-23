@@ -46,7 +46,7 @@ public class Trc20EventRecord: Record {
         case tokenDecimal
     }
 
-    required public init(row: Row) {
+    required public init(row: Row) throws {
         transactionHash = row[Columns.transactionHash]
         type = row[Columns.type]
         blockTimestamp = row[Columns.blockNumber]
@@ -58,7 +58,7 @@ public class Trc20EventRecord: Record {
         tokenSymbol = row[Columns.tokenSymbol]
         tokenDecimal = row[Columns.tokenDecimal]
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     override public func encode(to container: inout PersistenceContainer) {

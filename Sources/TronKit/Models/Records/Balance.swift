@@ -21,11 +21,11 @@ class Balance: Record {
         case balance
     }
 
-    required init(row: Row) {
+    required init(row: Row) throws {
         id = row[Columns.id]
         balance = row[Columns.balance]
 
-        super.init(row: row)
+        try super.init(row: row)
     }
 
     override func encode(to container: inout PersistenceContainer) {
