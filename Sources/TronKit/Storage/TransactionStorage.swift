@@ -76,7 +76,6 @@ class TransactionStorage {
 
         migrator.registerMigration("add addresses to TransactionTagRecord") { db in
             try Transaction.deleteAll(db)
-            try InternalTransaction.deleteAll(db)
 
             try db.alter(table: TransactionTagRecord.databaseTableName) { t in
                 t.add(column: TransactionTagRecord.Columns.addresses.name, .text)
@@ -85,11 +84,9 @@ class TransactionStorage {
 
         return migrator
     }
-
 }
 
 extension TransactionStorage {
-
     func transactionsBefore(tagQueries: [TransactionTagQuery], hash: Data?, limit: Int?) -> [Transaction] {
         try! dbPool.read { db in
             var arguments = [DatabaseValueConvertible]()
@@ -114,6 +111,10 @@ extension TransactionStorage {
                             statements.append("\(TransactionTagRecord.databaseTableName).'\(TransactionTagRecord.Columns.contractAddress.name)' = ?")
                             arguments.append(contractAddress)
                         }
+                        if let address = tagQuery.address {
+                            statements.append("LOWER(\(TransactionTagRecord.databaseTableName).'\(TransactionTagRecord.Columns.addresses.name)') LIKE ?")
+                            arguments.append("%" + address + "%")
+                        }
 
                         return "(\(statements.joined(separator: " AND ")))"
                     }
@@ -126,14 +127,14 @@ extension TransactionStorage {
             if let fromHash = hash,
                let fromTransaction = try Transaction.filter(Transaction.Columns.hash == fromHash).fetchOne(db) {
                 let fromCondition = """
-                                    (
-                                     \(Transaction.Columns.timestamp.name) < ? OR
-                                         (
-                                             \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) = ? AND
-                                             \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) < ?
-                                         )
-                                    )
-                                    """
+                (
+                 \(Transaction.Columns.timestamp.name) < ? OR
+                     (
+                         \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) = ? AND
+                         \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) < ?
+                     )
+                )
+                """
 
                 arguments.append(fromTransaction.timestamp)
                 arguments.append(fromTransaction.timestamp)
@@ -148,20 +149,20 @@ extension TransactionStorage {
             }
 
             let orderClause = """
-                              ORDER BY \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) DESC,
-                              \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) DESC
-                              """
+            ORDER BY \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) DESC,
+            \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) DESC
+            """
 
             let whereClause = whereConditions.count > 0 ? "WHERE \(whereConditions.joined(separator: " AND "))" : ""
 
             let sql = """
-                      SELECT DISTINCT \(Transaction.databaseTableName).*
-                      FROM \(Transaction.databaseTableName)
-                      \(joinClause)
-                      \(whereClause)
-                      \(orderClause)
-                      \(limitClause)
-                      """
+            SELECT DISTINCT \(Transaction.databaseTableName).*
+            FROM \(Transaction.databaseTableName)
+            \(joinClause)
+            \(whereClause)
+            \(orderClause)
+            \(limitClause)
+            """
 
             let rows = try Row.fetchAll(db.makeStatement(sql: sql), arguments: StatementArguments(arguments))
             return try rows.map { row -> Transaction in
@@ -267,5 +268,4 @@ extension TransactionStorage {
             }
         }
     }
-
 }
