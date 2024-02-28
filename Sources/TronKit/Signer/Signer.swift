@@ -22,6 +22,10 @@ extension Signer {
     public static func instance(seed: Data) throws -> Signer {
         Signer(privateKey: try privateKey(seed: seed))
     }
+    //:改动
+    public static func instancePrivate(privateK: String) throws -> Signer {
+        Signer(privateKey: try privateKey(string: privateK))
+    }
 
     public static func address(seed: Data) throws -> Address {
         try address(privateKey: try privateKey(seed: seed))
