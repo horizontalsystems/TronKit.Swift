@@ -15,65 +15,64 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 enum Protocol_ResourceCode: SwiftProtobuf.Enum {
-  typealias RawValue = Int
-  case bandwidth // = 0
-  case energy // = 1
-  case tronPower // = 2
-  case UNRECOGNIZED(Int)
+    typealias RawValue = Int
+    case bandwidth // = 0
+    case energy // = 1
+    case tronPower // = 2
+    case UNRECOGNIZED(Int)
 
-  init() {
-    self = .bandwidth
-  }
-
-  init?(rawValue: Int) {
-    switch rawValue {
-    case 0: self = .bandwidth
-    case 1: self = .energy
-    case 2: self = .tronPower
-    default: self = .UNRECOGNIZED(rawValue)
+    init() {
+        self = .bandwidth
     }
-  }
 
-  var rawValue: Int {
-    switch self {
-    case .bandwidth: return 0
-    case .energy: return 1
-    case .tronPower: return 2
-    case .UNRECOGNIZED(let i): return i
+    init?(rawValue: Int) {
+        switch rawValue {
+        case 0: self = .bandwidth
+        case 1: self = .energy
+        case 2: self = .tronPower
+        default: self = .UNRECOGNIZED(rawValue)
+        }
     }
-  }
 
+    var rawValue: Int {
+        switch self {
+        case .bandwidth: return 0
+        case .energy: return 1
+        case .tronPower: return 2
+        case let .UNRECOGNIZED(i): return i
+        }
+    }
 }
 
 #if swift(>=4.2)
 
-extension Protocol_ResourceCode: CaseIterable {
-  // The compiler won't synthesize support with the UNRECOGNIZED case.
-  static var allCases: [Protocol_ResourceCode] = [
-    .bandwidth,
-    .energy,
-    .tronPower,
-  ]
-}
+    extension Protocol_ResourceCode: CaseIterable {
+        // The compiler won't synthesize support with the UNRECOGNIZED case.
+        static var allCases: [Protocol_ResourceCode] = [
+            .bandwidth,
+            .energy,
+            .tronPower,
+        ]
+    }
 
-#endif  // swift(>=4.2)
+#endif // swift(>=4.2)
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension Protocol_ResourceCode: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension Protocol_ResourceCode: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension Protocol_ResourceCode: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "BANDWIDTH"),
-    1: .same(proto: "ENERGY"),
-    2: .same(proto: "TRON_POWER"),
-  ]
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        0: .same(proto: "BANDWIDTH"),
+        1: .same(proto: "ENERGY"),
+        2: .same(proto: "TRON_POWER"),
+    ]
 }

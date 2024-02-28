@@ -1,6 +1,6 @@
+import BigInt
 import Foundation
 import GRDB
-import BigInt
 
 class AccountInfoStorage {
     private let dbPool: DatabasePool
@@ -29,11 +29,9 @@ class AccountInfoStorage {
     private var trxId = "TRX"
     private func trc10Id(name: String) -> String { "trc10/\(name)" }
     private func trc20Id(contractAddress: String) -> String { "trc20/\(contractAddress)" }
-
 }
 
 extension AccountInfoStorage {
-
     var trxBalance: BigUInt? {
         try! dbPool.read { db in
             try Balance.filter(Balance.Columns.id == trxId).fetchOne(db)?.balance
@@ -65,5 +63,4 @@ extension AccountInfoStorage {
             try Balance.filter(Balance.Columns.id != trxId).deleteAll(db)
         }
     }
-
 }

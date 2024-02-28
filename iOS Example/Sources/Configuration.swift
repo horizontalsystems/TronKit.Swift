@@ -1,5 +1,5 @@
-import TronKit
 import HsToolKit
+import TronKit
 
 class Configuration {
     static let shared = Configuration()

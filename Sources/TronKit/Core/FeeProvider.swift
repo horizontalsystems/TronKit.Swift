@@ -1,6 +1,6 @@
+import BigInt
 import Foundation
 import SwiftProtobuf
-import BigInt
 
 class FeeProvider {
     private let tronGridProvider: TronGridProvider
@@ -14,7 +14,7 @@ class FeeProvider {
     private func feesForAccountActivation() -> [Fee] {
         [
             .bandwidth(points: chainParameterManager.сreateAccountFee / chainParameterManager.transactionFee, price: chainParameterManager.transactionFee),
-            .accountActivation(amount: chainParameterManager.сreateNewAccountFeeInSystemContract)
+            .accountActivation(amount: chainParameterManager.сreateNewAccountFeeInSystemContract),
         ]
     }
 
@@ -30,42 +30,40 @@ class FeeProvider {
             return false
         }
     }
-
 }
 
 extension FeeProvider {
-
     func estimateFee(contract: Contract) async throws -> [Fee] {
         var fees = [Fee]()
         var feeLimit: Int64 = 0
 
         switch contract {
-            case let contract as TransferContract:
-                if !(try await isAccountActive(address: contract.toAddress)) {
-                    return feesForAccountActivation()
-                }
+        case let contract as TransferContract:
+            if try await !isAccountActive(address: contract.toAddress) {
+                return feesForAccountActivation()
+            }
 
-            case let contract as TransferAssetContract:
-                if !(try await isAccountActive(address: contract.toAddress)) {
-                    return feesForAccountActivation()
-                }
+        case let contract as TransferAssetContract:
+            if try await !isAccountActive(address: contract.toAddress) {
+                return feesForAccountActivation()
+            }
 
-            case let contract as TriggerSmartContract:
-                let energyPrice = chainParameterManager.energyFee
-                let energyRequired = try await tronGridProvider.fetch(
-                    rpc: EstimateGasJsonRpc(
-                        from: contract.ownerAddress,
-                        to: contract.contractAddress,
-                        amount: contract.callValue.flatMap { BigUInt($0) },
-                        gasPrice: 1,
-                        data: contract.data.hs.hexData!
-                    )
+        case let contract as TriggerSmartContract:
+            let energyPrice = chainParameterManager.energyFee
+            let energyRequired = try await tronGridProvider.fetch(
+                rpc: EstimateGasJsonRpc(
+                    from: contract.ownerAddress,
+                    to: contract.contractAddress,
+                    amount: contract.callValue.flatMap { BigUInt($0) },
+                    gasPrice: 1,
+                    data: contract.data.hs.hexData!
                 )
+            )
 
-                feeLimit = Int64(energyRequired * energyPrice)
-                fees.append(.energy(required: energyRequired, price: energyPrice))
+            feeLimit = Int64(energyRequired * energyPrice)
+            fees.append(.energy(required: energyRequired, price: energyPrice))
 
-            default: throw FeeProvider.FeeError.notSupportedContract
+        default: throw FeeProvider.FeeError.notSupportedContract
         }
 
         guard let supportedContract = contract as? SupportedContract else {
@@ -95,7 +93,6 @@ extension FeeProvider {
 
         return fees
     }
-
 }
 
 extension FeeProvider {

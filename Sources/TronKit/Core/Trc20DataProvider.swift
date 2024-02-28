@@ -1,10 +1,9 @@
-import Foundation
 import BigInt
+import Foundation
 import HsExtensions
 import HsToolKit
 
-public struct Trc20DataProvider {
-
+public enum Trc20DataProvider {
     public static func fetchName(networkManager: NetworkManager, network: Network, apiKey: String?, contractAddress: Address) async throws -> String {
         let data = try await TronKit.Kit.call(networkManager: networkManager, network: network, contractAddress: contractAddress, data: NameMethod().encodedABI(), apiKey: apiKey)
 
@@ -62,11 +61,9 @@ public struct Trc20DataProvider {
 
         return value
     }
-
 }
 
 extension Trc20DataProvider {
-
     class NameMethod: ContractMethod {
         override var methodSignature: String { "name()" }
         override var arguments: [Any] { [] }
@@ -87,5 +84,4 @@ extension Trc20DataProvider {
         case notRegistered
         case alreadyRegistered
     }
-
 }

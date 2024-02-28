@@ -6,11 +6,9 @@ class TransactionSender {
     init(tronGridProvider: TronGridProvider) {
         self.tronGridProvider = tronGridProvider
     }
-
 }
 
 extension TransactionSender {
-
     func sendTransaction(contract: Contract, signer: Signer, feeLimit: Int?) async throws -> CreatedTransactionResponse {
         var createdTransaction: CreatedTransactionResponse
 
@@ -19,32 +17,34 @@ extension TransactionSender {
         }
 
         switch contract {
-            case let transfer as TransferContract:
-                createdTransaction = try await tronGridProvider.createTransaction(ownerAddress: transfer.ownerAddress.hex, toAddress: transfer.toAddress.hex, amount: transfer.amount)
+        case let transfer as TransferContract:
+            createdTransaction = try await tronGridProvider.createTransaction(ownerAddress: transfer.ownerAddress.hex, toAddress: transfer.toAddress.hex, amount: transfer.amount)
 
-            case let smartContract as TriggerSmartContract:
-                guard let functionSelector = smartContract.functionSelector,
-                      let parameter = smartContract.parameter,
-                      let feeLimit = feeLimit else {
-                    throw Kit.SendError.invalidParameter
-                }
+        case let smartContract as TriggerSmartContract:
+            guard let functionSelector = smartContract.functionSelector,
+                  let parameter = smartContract.parameter,
+                  let feeLimit
+            else {
+                throw Kit.SendError.invalidParameter
+            }
 
-                createdTransaction = try await tronGridProvider.triggerSmartContract(
-                    ownerAddress: smartContract.ownerAddress.hex,
-                    contractAddress: smartContract.contractAddress.hex,
-                    functionSelector: functionSelector,
-                    parameter: parameter,
-                    feeLimit: feeLimit
-                )
+            createdTransaction = try await tronGridProvider.triggerSmartContract(
+                ownerAddress: smartContract.ownerAddress.hex,
+                contractAddress: smartContract.contractAddress.hex,
+                functionSelector: functionSelector,
+                parameter: parameter,
+                feeLimit: feeLimit
+            )
 
-            default: throw Kit.SendError.notSupportedContract
+        default: throw Kit.SendError.notSupportedContract
         }
 
         let rawData = try Protocol_Transaction.raw(serializedData: createdTransaction.rawDataHex)
 
         guard rawData.contract.count == 1,
-                let contractMessage = rawData.contract.first,
-                contractMessage.parameter.value == (try contract.protoMessage.serializedData()) else {
+              let contractMessage = rawData.contract.first,
+              try contractMessage.parameter.value == (contract.protoMessage.serializedData())
+        else {
             throw Kit.SendError.abnormalSend
         }
 
@@ -58,5 +58,4 @@ extension TransactionSender {
 
         return createdTransaction
     }
-
 }

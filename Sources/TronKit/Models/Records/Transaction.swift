@@ -1,6 +1,6 @@
+import BigInt
 import Foundation
 import GRDB
-import BigInt
 
 public class Transaction: Record {
     public let hash: Data
@@ -35,13 +35,14 @@ public class Transaction: Record {
     public init(hash: Data, timestamp: Int, isFailed: Bool, blockNumber: Int? = nil, confirmed: Bool,
                 fee: Int? = nil, netUsage: Int? = nil, netFee: Int? = nil,
                 energyUsage: Int? = nil, energyFee: Int? = nil, energyUsageTotal: Int? = nil,
-                contractsMap: Any? = nil) {
+                contractsMap: Any? = nil)
+    {
         self.hash = hash
         self.timestamp = timestamp
         self.isFailed = isFailed
         self.blockNumber = blockNumber
         self.confirmed = confirmed
-        self.processed = false
+        processed = false
 
         self.fee = fee
         self.netUsage = netUsage
@@ -50,17 +51,17 @@ public class Transaction: Record {
         self.energyFee = energyFee
         self.energyUsageTotal = energyUsageTotal
 
-        self.contractsRaw = contractsMap.flatMap { try? JSONSerialization.data(withJSONObject: $0)}
+        contractsRaw = contractsMap.flatMap { try? JSONSerialization.data(withJSONObject: $0) }
 
         super.init()
 
-        if let contractsMap = contractsMap {
+        if let contractsMap {
             let contracts = try? ContractHelper.contractsFrom(jsonMap: contractsMap)
-            self.contract = contracts?.first
+            contract = contracts?.first
         }
     }
 
-    public override class var databaseTableName: String {
+    override public class var databaseTableName: String {
         "transactions"
     }
 
@@ -98,7 +99,7 @@ public class Transaction: Record {
         try super.init(row: row)
     }
 
-    public override func encode(to container: inout PersistenceContainer) {
+    override public func encode(to container: inout PersistenceContainer) {
         container[Columns.hash] = hash
         container[Columns.timestamp] = timestamp
         container[Columns.isFailed] = isFailed
@@ -113,5 +114,4 @@ public class Transaction: Record {
         container[Columns.energyUsageTotal] = energyUsageTotal
         container[Columns.contractsRaw] = contractsRaw
     }
-
 }

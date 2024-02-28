@@ -1,5 +1,5 @@
-import Foundation
 import BigInt
+import Foundation
 
 class DecorationManager {
     private let userAddress: Address
@@ -17,7 +17,7 @@ class DecorationManager {
         if transactions.count > 100 {
             internalTransactions = storage.internalTransactions()
         } else {
-            let hashes = transactions.map { $0.hash }
+            let hashes = transactions.map(\.hash)
             internalTransactions = storage.internalTransactions(hashes: hashes)
         }
 
@@ -36,7 +36,7 @@ class DecorationManager {
         if transactions.count > 100 {
             trc20Records = storage.trc20Events()
         } else {
-            let hashes = transactions.map { $0.hash }
+            let hashes = transactions.map(\.hash)
             trc20Records = storage.trc20Events(hashes: hashes)
         }
 
@@ -52,7 +52,7 @@ class DecorationManager {
     }
 
     private func decoration(contract: Contract?, internalTransactions: [InternalTransaction], events: [Event]) -> TransactionDecoration {
-        guard let contract = contract else {
+        guard let contract else {
             return UnknownTransactionDecoration(
                 contract: nil,
                 internalTransactions: internalTransactions,
@@ -76,11 +76,9 @@ class DecorationManager {
 
         return NativeTransactionDecoration(contract: contract)
     }
-
 }
 
 extension DecorationManager {
-
     func add(transactionDecorator: ITransactionDecorator) {
         transactionDecorators.append(transactionDecorator)
     }
@@ -94,7 +92,6 @@ extension DecorationManager {
             }
         }
 
-
         return NativeTransactionDecoration(contract: contract)
     }
 
@@ -104,9 +101,9 @@ extension DecorationManager {
 
         return transactions.map { transaction in
             let decoration = decoration(
-                    contract: transaction.contract,
-                    internalTransactions: internalTransactionsMap[transaction.hash] ?? [],
-                    events: eventsMap[transaction.hash] ?? []
+                contract: transaction.contract,
+                internalTransactions: internalTransactionsMap[transaction.hash] ?? [],
+                events: eventsMap[transaction.hash] ?? []
             )
 
             return FullTransaction(transaction: transaction, decoration: decoration)

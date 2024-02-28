@@ -8,12 +8,10 @@ class Trc20TransactionDecorator {
         self.address = address
         factories.register(factories: [TransferMethodFactory(), ApproveMethodFactory()])
     }
-
 }
 
 extension Trc20TransactionDecorator: ITransactionDecorator {
-
-    func decoration(contract: TriggerSmartContract, internalTransactions: [InternalTransaction], events: [Event]) -> TransactionDecoration? {
+    func decoration(contract: TriggerSmartContract, internalTransactions _: [InternalTransaction], events: [Event]) -> TransactionDecoration? {
         guard let contractMethod = factories.createMethod(input: contract.data.hs.hexData!) else {
             return nil
         }
@@ -40,5 +38,4 @@ extension Trc20TransactionDecorator: ITransactionDecorator {
 
         return nil
     }
-
 }

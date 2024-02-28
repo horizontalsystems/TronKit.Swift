@@ -1,6 +1,6 @@
+import BigInt
 import Foundation
 import GRDB
-import BigInt
 
 public class Trc20EventRecord: Record {
     public let transactionHash: Data
@@ -46,7 +46,7 @@ public class Trc20EventRecord: Record {
         case tokenDecimal
     }
 
-    required public init(row: Row) throws {
+    public required init(row: Row) throws {
         transactionHash = row[Columns.transactionHash]
         type = row[Columns.type]
         blockTimestamp = row[Columns.blockNumber]
@@ -73,5 +73,4 @@ public class Trc20EventRecord: Record {
         container[Columns.tokenSymbol] = tokenSymbol
         container[Columns.tokenDecimal] = tokenDecimal
     }
-
 }

@@ -4,7 +4,7 @@ public class TransactionTagQuery {
     public let contractAddress: Address?
     public let address: String?
 
-    public init(type: TransactionTag.TagType? = nil, `protocol`: TransactionTag.TagProtocol? = nil, contractAddress: Address? = nil, address: String?) {
+    public init(type: TransactionTag.TagType? = nil, protocol: TransactionTag.TagProtocol? = nil, contractAddress: Address? = nil, address: String?) {
         self.type = type
         self.protocol = `protocol`
         self.contractAddress = contractAddress
@@ -14,5 +14,4 @@ public class TransactionTagQuery {
     var isEmpty: Bool {
         type == nil && `protocol` == nil && contractAddress == nil && address == nil
     }
-
 }

@@ -9,5 +9,4 @@ struct ChainParameterResponse: ImmutableMappable {
         key = try map.value("key")
         value = try map.value("value")
     }
-
 }

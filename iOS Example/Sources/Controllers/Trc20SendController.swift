@@ -1,9 +1,9 @@
+import BigInt
 import Combine
-import UIKit
+import HsExtensions
 import SnapKit
 import TronKit
-import HsExtensions
-import BigInt
+import UIKit
 
 class Trc20SendController: UIViewController {
     private let adapter: TrxAdapter = Manager.shared.adapter
@@ -133,7 +133,8 @@ class Trc20SendController: UIViewController {
         guard let addressHex = addressTextField.text?.trimmingCharacters(in: .whitespaces),
               let valueText = amountTextField.text,
               let value = BigUInt(valueText),
-              value > 0 else {
+              value > 0
+        else {
             return
         }
 
@@ -160,13 +161,13 @@ class Trc20SendController: UIViewController {
                     let feeString: String
 
                     switch fee {
-                        case let .bandwidth(points, price): feeString = "\((Decimal(points * price) / 1_000_000).description)TRX (\(points) Bandwidth)"
+                    case let .bandwidth(points, price): feeString = "\((Decimal(points * price) / 1_000_000).description)TRX (\(points) Bandwidth)"
 
-                        case let .energy(required, price):
-                            feeString = "\((Decimal(required * price) / 1_000_000).description)TRX (\(required) Energy)"
-                            self?.estimatedFeeLimit = required * price
+                    case let .energy(required, price):
+                        feeString = "\((Decimal(required * price) / 1_000_000).description)TRX (\(required) Energy)"
+                        self?.estimatedFeeLimit = required * price
 
-                        case let .accountActivation(amount): feeString = "\((Decimal(amount) / 1_000_000).description)TRX (Account Activation)"
+                    case let .accountActivation(amount): feeString = "\((Decimal(amount) / 1_000_000).description)TRX (Account Activation)"
                     }
 
                     feeStrings.append(feeString)
@@ -226,5 +227,4 @@ class Trc20SendController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         present(alert, animated: true)
     }
-
 }

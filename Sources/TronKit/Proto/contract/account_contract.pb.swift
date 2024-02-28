@@ -29,276 +29,278 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 struct Protocol_AccountCreateContract {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  var ownerAddress: Data = Data()
+    var ownerAddress: Data = .init()
 
-  var accountAddress: Data = Data()
+    var accountAddress: Data = .init()
 
-  var type: Protocol_AccountType = .normal
+    var type: Protocol_AccountType = .normal
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
+    var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  init() {}
+    init() {}
 }
 
 /// Update account name. Account name is not unique now.
 struct Protocol_AccountUpdateContract {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  var accountName: Data = Data()
+    var accountName: Data = .init()
 
-  var ownerAddress: Data = Data()
+    var ownerAddress: Data = .init()
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
+    var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  init() {}
+    init() {}
 }
 
 /// Set account id if the account has no id. Account id is unique and case insensitive.
 struct Protocol_SetAccountIdContract {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  var accountID: Data = Data()
+    var accountID: Data = .init()
 
-  var ownerAddress: Data = Data()
+    var ownerAddress: Data = .init()
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
+    var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  init() {}
+    init() {}
 }
 
 struct Protocol_AccountPermissionUpdateContract {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  var ownerAddress: Data = Data()
+    var ownerAddress: Data = .init()
 
-  ///Empty is invalidate
-  var owner: Protocol_Permission {
-    get {return _owner ?? Protocol_Permission()}
-    set {_owner = newValue}
-  }
-  /// Returns true if `owner` has been explicitly set.
-  var hasOwner: Bool {return self._owner != nil}
-  /// Clears the value of `owner`. Subsequent reads from it will return its default value.
-  mutating func clearOwner() {self._owner = nil}
+    /// Empty is invalidate
+    var owner: Protocol_Permission {
+        get { _owner ?? Protocol_Permission() }
+        set { _owner = newValue }
+    }
 
-  ///Can be empty
-  var witness: Protocol_Permission {
-    get {return _witness ?? Protocol_Permission()}
-    set {_witness = newValue}
-  }
-  /// Returns true if `witness` has been explicitly set.
-  var hasWitness: Bool {return self._witness != nil}
-  /// Clears the value of `witness`. Subsequent reads from it will return its default value.
-  mutating func clearWitness() {self._witness = nil}
+    /// Returns true if `owner` has been explicitly set.
+    var hasOwner: Bool { _owner != nil }
+    /// Clears the value of `owner`. Subsequent reads from it will return its default value.
+    mutating func clearOwner() { _owner = nil }
 
-  ///Empty is invalidate
-  var actives: [Protocol_Permission] = []
+    /// Can be empty
+    var witness: Protocol_Permission {
+        get { _witness ?? Protocol_Permission() }
+        set { _witness = newValue }
+    }
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
+    /// Returns true if `witness` has been explicitly set.
+    var hasWitness: Bool { _witness != nil }
+    /// Clears the value of `witness`. Subsequent reads from it will return its default value.
+    mutating func clearWitness() { _witness = nil }
 
-  init() {}
+    /// Empty is invalidate
+    var actives: [Protocol_Permission] = []
 
-  fileprivate var _owner: Protocol_Permission? = nil
-  fileprivate var _witness: Protocol_Permission? = nil
+    var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+
+    private var _owner: Protocol_Permission?
+    private var _witness: Protocol_Permission?
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension Protocol_AccountCreateContract: @unchecked Sendable {}
-extension Protocol_AccountUpdateContract: @unchecked Sendable {}
-extension Protocol_SetAccountIdContract: @unchecked Sendable {}
-extension Protocol_AccountPermissionUpdateContract: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension Protocol_AccountCreateContract: @unchecked Sendable {}
+    extension Protocol_AccountUpdateContract: @unchecked Sendable {}
+    extension Protocol_SetAccountIdContract: @unchecked Sendable {}
+    extension Protocol_AccountPermissionUpdateContract: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "protocol"
+private let _protobuf_package = "protocol"
 
 extension Protocol_AccountCreateContract: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".AccountCreateContract"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "owner_address"),
-    2: .standard(proto: "account_address"),
-    3: .same(proto: "type"),
-  ]
+    static let protoMessageName: String = _protobuf_package + ".AccountCreateContract"
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "owner_address"),
+        2: .standard(proto: "account_address"),
+        3: .same(proto: "type"),
+    ]
 
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.ownerAddress) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.accountAddress) }()
-      case 3: try { try decoder.decodeSingularEnumField(value: &self.type) }()
-      default: break
-      }
+    mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &ownerAddress)
+            case 2: try decoder.decodeSingularBytesField(value: &accountAddress)
+            case 3: try decoder.decodeSingularEnumField(value: &type)
+            default: break
+            }
+        }
     }
-  }
 
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.ownerAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ownerAddress, fieldNumber: 1)
+    func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !ownerAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: ownerAddress, fieldNumber: 1)
+        }
+        if !accountAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: accountAddress, fieldNumber: 2)
+        }
+        if type != .normal {
+            try visitor.visitSingularEnumField(value: type, fieldNumber: 3)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.accountAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.accountAddress, fieldNumber: 2)
-    }
-    if self.type != .normal {
-      try visitor.visitSingularEnumField(value: self.type, fieldNumber: 3)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  static func ==(lhs: Protocol_AccountCreateContract, rhs: Protocol_AccountCreateContract) -> Bool {
-    if lhs.ownerAddress != rhs.ownerAddress {return false}
-    if lhs.accountAddress != rhs.accountAddress {return false}
-    if lhs.type != rhs.type {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    static func == (lhs: Protocol_AccountCreateContract, rhs: Protocol_AccountCreateContract) -> Bool {
+        if lhs.ownerAddress != rhs.ownerAddress { return false }
+        if lhs.accountAddress != rhs.accountAddress { return false }
+        if lhs.type != rhs.type { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension Protocol_AccountUpdateContract: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".AccountUpdateContract"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "account_name"),
-    2: .standard(proto: "owner_address"),
-  ]
+    static let protoMessageName: String = _protobuf_package + ".AccountUpdateContract"
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "account_name"),
+        2: .standard(proto: "owner_address"),
+    ]
 
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.accountName) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.ownerAddress) }()
-      default: break
-      }
+    mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &accountName)
+            case 2: try decoder.decodeSingularBytesField(value: &ownerAddress)
+            default: break
+            }
+        }
     }
-  }
 
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.accountName.isEmpty {
-      try visitor.visitSingularBytesField(value: self.accountName, fieldNumber: 1)
+    func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !accountName.isEmpty {
+            try visitor.visitSingularBytesField(value: accountName, fieldNumber: 1)
+        }
+        if !ownerAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: ownerAddress, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.ownerAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ownerAddress, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  static func ==(lhs: Protocol_AccountUpdateContract, rhs: Protocol_AccountUpdateContract) -> Bool {
-    if lhs.accountName != rhs.accountName {return false}
-    if lhs.ownerAddress != rhs.ownerAddress {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    static func == (lhs: Protocol_AccountUpdateContract, rhs: Protocol_AccountUpdateContract) -> Bool {
+        if lhs.accountName != rhs.accountName { return false }
+        if lhs.ownerAddress != rhs.ownerAddress { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension Protocol_SetAccountIdContract: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".SetAccountIdContract"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "account_id"),
-    2: .standard(proto: "owner_address"),
-  ]
+    static let protoMessageName: String = _protobuf_package + ".SetAccountIdContract"
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "account_id"),
+        2: .standard(proto: "owner_address"),
+    ]
 
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.accountID) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.ownerAddress) }()
-      default: break
-      }
+    mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &accountID)
+            case 2: try decoder.decodeSingularBytesField(value: &ownerAddress)
+            default: break
+            }
+        }
     }
-  }
 
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.accountID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.accountID, fieldNumber: 1)
+    func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !accountID.isEmpty {
+            try visitor.visitSingularBytesField(value: accountID, fieldNumber: 1)
+        }
+        if !ownerAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: ownerAddress, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.ownerAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ownerAddress, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  static func ==(lhs: Protocol_SetAccountIdContract, rhs: Protocol_SetAccountIdContract) -> Bool {
-    if lhs.accountID != rhs.accountID {return false}
-    if lhs.ownerAddress != rhs.ownerAddress {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    static func == (lhs: Protocol_SetAccountIdContract, rhs: Protocol_SetAccountIdContract) -> Bool {
+        if lhs.accountID != rhs.accountID { return false }
+        if lhs.ownerAddress != rhs.ownerAddress { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension Protocol_AccountPermissionUpdateContract: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".AccountPermissionUpdateContract"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "owner_address"),
-    2: .same(proto: "owner"),
-    3: .same(proto: "witness"),
-    4: .same(proto: "actives"),
-  ]
+    static let protoMessageName: String = _protobuf_package + ".AccountPermissionUpdateContract"
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "owner_address"),
+        2: .same(proto: "owner"),
+        3: .same(proto: "witness"),
+        4: .same(proto: "actives"),
+    ]
 
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.ownerAddress) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._owner) }()
-      case 3: try { try decoder.decodeSingularMessageField(value: &self._witness) }()
-      case 4: try { try decoder.decodeRepeatedMessageField(value: &self.actives) }()
-      default: break
-      }
+    mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &ownerAddress)
+            case 2: try decoder.decodeSingularMessageField(value: &_owner)
+            case 3: try decoder.decodeSingularMessageField(value: &_witness)
+            case 4: try decoder.decodeRepeatedMessageField(value: &actives)
+            default: break
+            }
+        }
     }
-  }
 
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.ownerAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ownerAddress, fieldNumber: 1)
+    func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        // The use of inline closures is to circumvent an issue where the compiler
+        // allocates stack space for every if/case branch local when no optimizations
+        // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+        // https://github.com/apple/swift-protobuf/issues/1182
+        if !ownerAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: ownerAddress, fieldNumber: 1)
+        }
+        try { if let v = self._owner {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+        } }()
+        try { if let v = self._witness {
+            try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+        } }()
+        if !actives.isEmpty {
+            try visitor.visitRepeatedMessageField(value: actives, fieldNumber: 4)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    try { if let v = self._owner {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    try { if let v = self._witness {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    } }()
-    if !self.actives.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.actives, fieldNumber: 4)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  static func ==(lhs: Protocol_AccountPermissionUpdateContract, rhs: Protocol_AccountPermissionUpdateContract) -> Bool {
-    if lhs.ownerAddress != rhs.ownerAddress {return false}
-    if lhs._owner != rhs._owner {return false}
-    if lhs._witness != rhs._witness {return false}
-    if lhs.actives != rhs.actives {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    static func == (lhs: Protocol_AccountPermissionUpdateContract, rhs: Protocol_AccountPermissionUpdateContract) -> Bool {
+        if lhs.ownerAddress != rhs.ownerAddress { return false }
+        if lhs._owner != rhs._owner { return false }
+        if lhs._witness != rhs._witness { return false }
+        if lhs.actives != rhs.actives { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }

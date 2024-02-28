@@ -1,7 +1,7 @@
 import Combine
-import UIKit
 import SnapKit
 import TronKit
+import UIKit
 
 class BalanceController: UIViewController {
     private let adapter: TrxAdapter = Manager.shared.adapter
@@ -50,11 +50,11 @@ class BalanceController: UIViewController {
         errorsLabel.textColor = .red
 
         Publishers.MergeMany(adapter.lastBlockHeightPublisher, adapter.syncStatePublisher, adapter.transactionsSyncStatePublisher, adapter.balancePublisher)
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] in
-                    self?.sync()
-                }
-                .store(in: &cancellables)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.sync()
+            }
+            .store(in: &cancellables)
 
         sync()
     }
@@ -81,13 +81,13 @@ class BalanceController: UIViewController {
         switch adapter.syncState {
         case .synced:
             syncStateString = "Synced!"
-        case .syncing(let progress):
-            if let progress = progress {
+        case let .syncing(progress):
+            if let progress {
                 syncStateString = "Syncing \(Int(progress * 100)) %"
             } else {
                 syncStateString = "Syncing"
             }
-        case .notSynced(let error):
+        case let .notSynced(error):
             syncStateString = "Not Synced"
             errorTexts.append("Sync Error: \(error)")
         }
@@ -95,16 +95,15 @@ class BalanceController: UIViewController {
         errorsLabel.text = errorTexts.joined(separator: "\n\n")
 
         titlesLabel.set(string: """
-                    Sync state:
-                    Last block height:
-                    Balance:
-                    """, alignment: .left)
+        Sync state:
+        Last block height:
+        Balance:
+        """, alignment: .left)
 
         valuesLabel.set(string: """
-                    \(syncStateString)
-                    \(adapter.lastBlockHeight.map { "# \($0)" } ?? "n/a")
-                    \(adapter.balance) \(adapter.coin)
-                    """, alignment: .right)
+        \(syncStateString)
+        \(adapter.lastBlockHeight.map { "# \($0)" } ?? "n/a")
+        \(adapter.balance) \(adapter.coin)
+        """, alignment: .right)
     }
-
 }
