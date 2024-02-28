@@ -8,16 +8,15 @@ public class Trc20ApproveEvent: Event {
     public let tokenInfo: TokenInfo?
 
     init(record: Trc20EventRecord) {
-        self.owner = record.from
-        self.spender = record.to
-        self.value = record.value
-        self.tokenInfo = TokenInfo(tokenName: record.tokenName, tokenSymbol: record.tokenSymbol, tokenDecimal: record.tokenDecimal)
+        owner = record.from
+        spender = record.to
+        value = record.value
+        tokenInfo = TokenInfo(tokenName: record.tokenName, tokenSymbol: record.tokenSymbol, tokenDecimal: record.tokenDecimal)
 
         super.init(transactionHash: record.transactionHash, contractAddress: record.contractAddress)
     }
 
-    public override func tags(userAddress: Address) -> [TransactionTag] {
+    override public func tags(userAddress _: Address) -> [TransactionTag] {
         [TransactionTag(type: .approve, protocol: .eip20, contractAddress: contractAddress)]
     }
-
 }

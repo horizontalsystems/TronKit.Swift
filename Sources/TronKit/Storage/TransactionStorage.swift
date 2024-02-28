@@ -128,7 +128,8 @@ extension TransactionStorage {
             }
 
             if let fromHash = hash,
-               let fromTransaction = try Transaction.filter(Transaction.Columns.hash == fromHash).fetchOne(db) {
+               let fromTransaction = try Transaction.filter(Transaction.Columns.hash == fromHash).fetchOne(db)
+            {
                 let fromCondition = """
                 (
                  \(Transaction.Columns.timestamp.name) < ? OR
@@ -147,7 +148,7 @@ extension TransactionStorage {
             }
 
             var limitClause = ""
-            if let limit = limit {
+            if let limit {
                 limitClause += "LIMIT \(limit)"
             }
 

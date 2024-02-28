@@ -1,10 +1,7 @@
 open class TransactionDecoration {
+    public init() {}
 
-    public init() {
-    }
-
-    open func tags(userAddress: Address) -> [TransactionTag] {
+    open func tags(userAddress _: Address) -> [TransactionTag] {
         []
     }
-
 }

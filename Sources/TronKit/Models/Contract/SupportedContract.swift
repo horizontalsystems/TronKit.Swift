@@ -6,7 +6,6 @@ protocol SupportedContract: Contract {
 }
 
 extension TransferContract: SupportedContract {
-
     var protoMessage: Message {
         var message = Protocol_TransferContract()
         message.ownerAddress = ownerAddress.raw
@@ -19,11 +18,9 @@ extension TransferContract: SupportedContract {
     var protoContractType: Protocol_Transaction.Contract.ContractType {
         .transferContract
     }
-
 }
 
 extension TriggerSmartContract: SupportedContract {
-
     var protoMessage: Message {
         var message = Protocol_TriggerSmartContract()
         message.ownerAddress = ownerAddress.raw
@@ -39,5 +36,4 @@ extension TriggerSmartContract: SupportedContract {
     var protoContractType: Protocol_Transaction.Contract.ContractType {
         .triggerSmartContract
     }
-
 }

@@ -1,6 +1,6 @@
 import Foundation
-import HsCryptoKit
 import GRDB
+import HsCryptoKit
 import HsExtensions
 
 public struct Address {
@@ -18,7 +18,7 @@ public struct Address {
         self.raw = prefixedRaw
 
         let checksum = Crypto.doubleSha256(prefixedRaw).prefix(4)
-        self.base58 = Data(prefixedRaw + checksum).hs.encodeBase58
+        base58 = Data(prefixedRaw + checksum).hs.encodeBase58
     }
 
     public init(address: String) throws {
@@ -28,7 +28,7 @@ public struct Address {
         }
 
         let checksum = decoded.suffix(4)
-        let hex = Data(decoded[0..<(decoded.count - 4)])
+        let hex = Data(decoded[0 ..< (decoded.count - 4)])
 
         let realChecksum = Crypto.doubleSha256(hex).prefix(4)
 
@@ -46,11 +46,9 @@ public struct Address {
     public var nonPrefixed: Data {
         raw.suffix(from: 1)
     }
-
 }
 
 extension Address {
-
     private static func validate(data: Data) throws {
         guard data[0] == 0x41 else {
             throw ValidationError.wrongAddressPrefix
@@ -59,54 +57,45 @@ extension Address {
             throw ValidationError.invalidAddressLength
         }
     }
-
 }
 
 extension Address: CustomStringConvertible {
-
     public var description: String {
         hex
     }
-
 }
 
 extension Address: Hashable {
-
     public func hash(into hasher: inout Hasher) {
         hasher.combine(raw)
     }
 
-    public static func ==(lhs: Address, rhs: Address) -> Bool {
+    public static func == (lhs: Address, rhs: Address) -> Bool {
         lhs.raw == rhs.raw
     }
-
 }
 
 extension Address: DatabaseValueConvertible {
-
     public var databaseValue: DatabaseValue {
         raw.databaseValue
     }
 
     public static func fromDatabaseValue(_ dbValue: DatabaseValue) -> Address? {
         switch dbValue.storage {
-            case .blob(let data):
-                return try! Address(raw: data)
-            default:
-                return nil
+        case let .blob(data):
+            return try! Address(raw: data)
+        default:
+            return nil
         }
     }
-
 }
 
-extension Address {
-
-    public enum ValidationError: Error {
+public extension Address {
+    enum ValidationError: Error {
         case invalidHex
         case invalidChecksum
         case invalidAddressLength
         case invalidSymbols
         case wrongAddressPrefix
     }
-
 }

@@ -9,7 +9,7 @@ open class Event {
         self.contractAddress = contractAddress
     }
 
-    open func tags(userAddress: Address) -> [TransactionTag] {
+    open func tags(userAddress _: Address) -> [TransactionTag] {
         []
     }
 }

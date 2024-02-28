@@ -42,11 +42,9 @@ class SyncerStorage {
 
         return migrator
     }
-
 }
 
 extension SyncerStorage {
-
     var lastBlockHeight: Int? {
         try? dbPool.read { db in
             try LastBlockHeight.fetchOne(db)?.height
@@ -86,5 +84,4 @@ extension SyncerStorage {
             try parameter.insert(db)
         }
     }
-
 }

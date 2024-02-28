@@ -1,5 +1,5 @@
-import Foundation
 import BigInt
+import Foundation
 import ObjectMapper
 
 struct AccountInfoResponse: ImmutableMappable {
@@ -14,7 +14,8 @@ struct AccountInfoResponse: ImmutableMappable {
             for balance in trc20Balances {
                 if let key = balance.keys.first, let value = balance.values.first,
                    let address = try? Address(address: key),
-                   let bigUintValue = BigUInt(value, radix: 10) {
+                   let bigUintValue = BigUInt(value, radix: 10)
+                {
                     trc20[address] = bigUintValue
                 }
             }

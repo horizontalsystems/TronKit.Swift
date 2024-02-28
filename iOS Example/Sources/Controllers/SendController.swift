@@ -1,8 +1,8 @@
 import Combine
-import UIKit
+import HsExtensions
 import SnapKit
 import TronKit
-import HsExtensions
+import UIKit
 
 class SendController: UIViewController {
     private let adapter: TrxAdapter = Manager.shared.adapter
@@ -94,7 +94,7 @@ class SendController: UIViewController {
         ethLabel.font = .systemFont(ofSize: 13)
         ethLabel.textColor = .black
         ethLabel.text = "TRX"
-        
+
         view.addSubview(gasPriceLabel)
         gasPriceLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().inset(16)
@@ -132,7 +132,8 @@ class SendController: UIViewController {
         guard let addressHex = addressTextField.text?.trimmingCharacters(in: .whitespaces),
               let valueText = amountTextField.text,
               let value = Int(valueText),
-              value > 0 else {
+              value > 0
+        else {
             return
         }
 
@@ -155,9 +156,9 @@ class SendController: UIViewController {
                     let feeString: String
 
                     switch fee {
-                        case let .bandwidth(points, price): feeString = "\((Decimal(points * price) / 1_000_000).description)TRX (\(points) Bandwidth)"
-                        case let .energy(required, price): feeString = "\((Decimal(required * price) / 1_000_000).description)TRX (\(required) Energy)"
-                        case let .accountActivation(amount): feeString = "\((Decimal(amount) / 1_000_000).description)TRX (Account Activation)"
+                    case let .bandwidth(points, price): feeString = "\((Decimal(points * price) / 1_000_000).description)TRX (\(points) Bandwidth)"
+                    case let .energy(required, price): feeString = "\((Decimal(required * price) / 1_000_000).description)TRX (\(required) Energy)"
+                    case let .accountActivation(amount): feeString = "\((Decimal(amount) / 1_000_000).description)TRX (Account Activation)"
                     }
 
                     feeStrings.append(feeString)
@@ -213,5 +214,4 @@ class SendController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         present(alert, animated: true)
     }
-
 }

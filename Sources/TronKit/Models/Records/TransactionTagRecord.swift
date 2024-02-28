@@ -43,7 +43,6 @@ class TransactionTagRecord: Record {
         container[Columns.contractAddress] = tag.contractAddress
         container[Columns.addresses] = Self.join(tag.addresses)
     }
-
 }
 
 extension TransactionTagRecord {

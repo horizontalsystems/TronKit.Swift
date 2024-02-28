@@ -1,11 +1,10 @@
+import BigInt
 import Foundation
-import UIKit
 import SnapKit
 import TronKit
-import BigInt
+import UIKit
 
 class TransactionCell: UITableViewCell {
-
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.locale = Locale.current
@@ -42,14 +41,15 @@ class TransactionCell: UITableViewCell {
         valuesLabel.textColor = .black
     }
 
-    required init?(coder aDecoder: NSCoder) {
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func bind(transaction: TransactionRecord, coin: String, lastBlockHeight: Int?) {
+    func bind(transaction: TransactionRecord, coin _: String, lastBlockHeight: Int?) {
         var confirmations = "n/a"
 
-        if let lastBlockHeight = lastBlockHeight, let blockHeight = transaction.blockHeight {
+        if let lastBlockHeight, let blockHeight = transaction.blockHeight {
             confirmations = "\(lastBlockHeight - blockHeight + 1)"
         }
 
@@ -60,24 +60,24 @@ class TransactionCell: UITableViewCell {
         }
 
         titlesLabel.set(string: """
-                    Tx Hash:
-                    Date:
-                    Failed:
-                    Block:
-                    Confirmations:
-                    Decoration:
-                    Contract:
-                    """, alignment: .left)
+        Tx Hash:
+        Date:
+        Failed:
+        Block:
+        Confirmations:
+        Decoration:
+        Contract:
+        """, alignment: .left)
 
         valuesLabel.set(string: """
-                    \(format(hash: transaction.transactionHash))
-                    \(TransactionCell.dateFormatter.string(from: Date(timeIntervalSince1970: Double(transaction.timestamp))))
-                    \(transaction.isFailed)
-                    \(transaction.blockHeight.map { "# \($0)" } ?? "n/a")
-                    \(confirmations)
-                    \(String(describing: transaction.decoration))
-                    \(contract.flatMap { String(describing: type(of: $0)) } ?? "n/a")
-                    """, alignment: .right)
+        \(format(hash: transaction.transactionHash))
+        \(TransactionCell.dateFormatter.string(from: Date(timeIntervalSince1970: Double(transaction.timestamp))))
+        \(transaction.isFailed)
+        \(transaction.blockHeight.map { "# \($0)" } ?? "n/a")
+        \(confirmations)
+        \(String(describing: transaction.decoration))
+        \(contract.flatMap { String(describing: type(of: $0)) } ?? "n/a")
+        """, alignment: .right)
     }
 
     private func format(hash: String) -> String {
@@ -87,5 +87,4 @@ class TransactionCell: UITableViewCell {
 
         return "\(hash[..<hash.index(hash.startIndex, offsetBy: 10)])...\(hash[hash.index(hash.endIndex, offsetBy: -10)...])"
     }
-
 }

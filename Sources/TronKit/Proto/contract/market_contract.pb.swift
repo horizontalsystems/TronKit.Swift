@@ -15,145 +15,145 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
-  struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
-  typealias Version = _2
+private struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+    struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
+    typealias Version = _2
 }
 
 struct Protocol_MarketSellAssetContract {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  var ownerAddress: Data = Data()
+    var ownerAddress: Data = .init()
 
-  var sellTokenID: Data = Data()
+    var sellTokenID: Data = .init()
 
-  var sellTokenQuantity: Int64 = 0
+    var sellTokenQuantity: Int64 = 0
 
-  var buyTokenID: Data = Data()
+    var buyTokenID: Data = .init()
 
-  /// min to receive
-  var buyTokenQuantity: Int64 = 0
+    /// min to receive
+    var buyTokenQuantity: Int64 = 0
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
+    var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  init() {}
+    init() {}
 }
 
 struct Protocol_MarketCancelOrderContract {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  var ownerAddress: Data = Data()
+    var ownerAddress: Data = .init()
 
-  var orderID: Data = Data()
+    var orderID: Data = .init()
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
+    var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  init() {}
+    init() {}
 }
 
 #if swift(>=5.5) && canImport(_Concurrency)
-extension Protocol_MarketSellAssetContract: @unchecked Sendable {}
-extension Protocol_MarketCancelOrderContract: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
+    extension Protocol_MarketSellAssetContract: @unchecked Sendable {}
+    extension Protocol_MarketCancelOrderContract: @unchecked Sendable {}
+#endif // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "protocol"
+private let _protobuf_package = "protocol"
 
 extension Protocol_MarketSellAssetContract: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".MarketSellAssetContract"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "owner_address"),
-    2: .standard(proto: "sell_token_id"),
-    3: .standard(proto: "sell_token_quantity"),
-    4: .standard(proto: "buy_token_id"),
-    5: .standard(proto: "buy_token_quantity"),
-  ]
+    static let protoMessageName: String = _protobuf_package + ".MarketSellAssetContract"
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "owner_address"),
+        2: .standard(proto: "sell_token_id"),
+        3: .standard(proto: "sell_token_quantity"),
+        4: .standard(proto: "buy_token_id"),
+        5: .standard(proto: "buy_token_quantity"),
+    ]
 
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.ownerAddress) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.sellTokenID) }()
-      case 3: try { try decoder.decodeSingularInt64Field(value: &self.sellTokenQuantity) }()
-      case 4: try { try decoder.decodeSingularBytesField(value: &self.buyTokenID) }()
-      case 5: try { try decoder.decodeSingularInt64Field(value: &self.buyTokenQuantity) }()
-      default: break
-      }
+    mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &ownerAddress)
+            case 2: try decoder.decodeSingularBytesField(value: &sellTokenID)
+            case 3: try decoder.decodeSingularInt64Field(value: &sellTokenQuantity)
+            case 4: try decoder.decodeSingularBytesField(value: &buyTokenID)
+            case 5: try decoder.decodeSingularInt64Field(value: &buyTokenQuantity)
+            default: break
+            }
+        }
     }
-  }
 
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.ownerAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ownerAddress, fieldNumber: 1)
+    func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !ownerAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: ownerAddress, fieldNumber: 1)
+        }
+        if !sellTokenID.isEmpty {
+            try visitor.visitSingularBytesField(value: sellTokenID, fieldNumber: 2)
+        }
+        if sellTokenQuantity != 0 {
+            try visitor.visitSingularInt64Field(value: sellTokenQuantity, fieldNumber: 3)
+        }
+        if !buyTokenID.isEmpty {
+            try visitor.visitSingularBytesField(value: buyTokenID, fieldNumber: 4)
+        }
+        if buyTokenQuantity != 0 {
+            try visitor.visitSingularInt64Field(value: buyTokenQuantity, fieldNumber: 5)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.sellTokenID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.sellTokenID, fieldNumber: 2)
-    }
-    if self.sellTokenQuantity != 0 {
-      try visitor.visitSingularInt64Field(value: self.sellTokenQuantity, fieldNumber: 3)
-    }
-    if !self.buyTokenID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.buyTokenID, fieldNumber: 4)
-    }
-    if self.buyTokenQuantity != 0 {
-      try visitor.visitSingularInt64Field(value: self.buyTokenQuantity, fieldNumber: 5)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  static func ==(lhs: Protocol_MarketSellAssetContract, rhs: Protocol_MarketSellAssetContract) -> Bool {
-    if lhs.ownerAddress != rhs.ownerAddress {return false}
-    if lhs.sellTokenID != rhs.sellTokenID {return false}
-    if lhs.sellTokenQuantity != rhs.sellTokenQuantity {return false}
-    if lhs.buyTokenID != rhs.buyTokenID {return false}
-    if lhs.buyTokenQuantity != rhs.buyTokenQuantity {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    static func == (lhs: Protocol_MarketSellAssetContract, rhs: Protocol_MarketSellAssetContract) -> Bool {
+        if lhs.ownerAddress != rhs.ownerAddress { return false }
+        if lhs.sellTokenID != rhs.sellTokenID { return false }
+        if lhs.sellTokenQuantity != rhs.sellTokenQuantity { return false }
+        if lhs.buyTokenID != rhs.buyTokenID { return false }
+        if lhs.buyTokenQuantity != rhs.buyTokenQuantity { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }
 
 extension Protocol_MarketCancelOrderContract: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".MarketCancelOrderContract"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "owner_address"),
-    2: .standard(proto: "order_id"),
-  ]
+    static let protoMessageName: String = _protobuf_package + ".MarketCancelOrderContract"
+    static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+        1: .standard(proto: "owner_address"),
+        2: .standard(proto: "order_id"),
+    ]
 
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.ownerAddress) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.orderID) }()
-      default: break
-      }
+    mutating func decodeMessage(decoder: inout some SwiftProtobuf.Decoder) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            // The use of inline closures is to circumvent an issue where the compiler
+            // allocates stack space for every case branch when no optimizations are
+            // enabled. https://github.com/apple/swift-protobuf/issues/1034
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBytesField(value: &ownerAddress)
+            case 2: try decoder.decodeSingularBytesField(value: &orderID)
+            default: break
+            }
+        }
     }
-  }
 
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.ownerAddress.isEmpty {
-      try visitor.visitSingularBytesField(value: self.ownerAddress, fieldNumber: 1)
+    func traverse(visitor: inout some SwiftProtobuf.Visitor) throws {
+        if !ownerAddress.isEmpty {
+            try visitor.visitSingularBytesField(value: ownerAddress, fieldNumber: 1)
+        }
+        if !orderID.isEmpty {
+            try visitor.visitSingularBytesField(value: orderID, fieldNumber: 2)
+        }
+        try unknownFields.traverse(visitor: &visitor)
     }
-    if !self.orderID.isEmpty {
-      try visitor.visitSingularBytesField(value: self.orderID, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
 
-  static func ==(lhs: Protocol_MarketCancelOrderContract, rhs: Protocol_MarketCancelOrderContract) -> Bool {
-    if lhs.ownerAddress != rhs.ownerAddress {return false}
-    if lhs.orderID != rhs.orderID {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
+    static func == (lhs: Protocol_MarketCancelOrderContract, rhs: Protocol_MarketCancelOrderContract) -> Bool {
+        if lhs.ownerAddress != rhs.ownerAddress { return false }
+        if lhs.orderID != rhs.orderID { return false }
+        if lhs.unknownFields != rhs.unknownFields { return false }
+        return true
+    }
 }

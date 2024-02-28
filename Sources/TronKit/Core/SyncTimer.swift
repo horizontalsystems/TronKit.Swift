@@ -1,8 +1,8 @@
-import Foundation
-import Combine
 import BigInt
-import HsToolKit
+import Combine
+import Foundation
 import HsExtensions
+import HsToolKit
 
 protocol ISyncTimerDelegate: AnyObject {
     func didUpdate(state: SyncTimer.State)
@@ -72,11 +72,9 @@ class SyncTimer {
             timer?.invalidate()
         }
     }
-
 }
 
 extension SyncTimer {
-
     func start() {
         isStarted = true
 
@@ -92,23 +90,19 @@ extension SyncTimer {
         state = .notReady(error: Kit.SyncError.notStarted)
         timer?.invalidate()
     }
-
 }
 
 extension SyncTimer {
-
     enum State: Equatable {
         case ready
         case notReady(error: Error)
 
-        public static func ==(lhs: State, rhs: State) -> Bool {
+        public static func == (lhs: State, rhs: State) -> Bool {
             switch (lhs, rhs) {
-                case (.ready, .ready): return true
-                case (.notReady(let lhsError), .notReady(let rhsError)): return "\(lhsError)" == "\(rhsError)"
-                default: return false
+            case (.ready, .ready): return true
+            case let (.notReady(lhsError), .notReady(rhsError)): return "\(lhsError)" == "\(rhsError)"
+            default: return false
             }
         }
-
     }
-
 }
