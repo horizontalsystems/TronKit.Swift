@@ -163,6 +163,15 @@ extension TransactionManager {
         process(initial: false)
     }
 
+    func tagTokens() -> [TagToken] {
+        do {
+            return try storage.tagTokens()
+        } catch {
+            print("Failed to fetch tag tokens: \(error)")
+            return []
+        }
+    }
+
 }
 
 public protocol ITransactionDecorator {
