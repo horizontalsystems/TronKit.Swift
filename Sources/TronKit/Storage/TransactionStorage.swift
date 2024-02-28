@@ -42,7 +42,7 @@ class TransactionStorage {
                 t.column(InternalTransaction.Columns.to.name, .text).notNull()
                 t.column(InternalTransaction.Columns.value.name, .integer).notNull()
 
-                t.foreignKey([InternalTransaction.Columns.transactionHash.name], references: Transaction.databaseTableName, columns: [Transaction.Columns.hash.name], onDelete: .cascade, onUpdate: .cascade, deferred: false)
+                t.foreignKey([InternalTransaction.Columns.transactionHash.name], references: Transaction.databaseTableName, columns: [Transaction.Columns.hash.name], onDelete: .cascade, onUpdate: .cascade, deferred: true)
             }
         }
 
@@ -59,7 +59,7 @@ class TransactionStorage {
                 t.column(Trc20EventRecord.Columns.tokenSymbol.name, .text).notNull()
                 t.column(Trc20EventRecord.Columns.tokenDecimal.name, .integer).notNull()
 
-                t.foreignKey([Trc20EventRecord.Columns.transactionHash.name], references: Transaction.databaseTableName, columns: [Transaction.Columns.hash.name], onDelete: .cascade, onUpdate: .cascade, deferred: false)
+                t.foreignKey([Trc20EventRecord.Columns.transactionHash.name], references: Transaction.databaseTableName, columns: [Transaction.Columns.hash.name], onDelete: .cascade, onUpdate: .cascade, deferred: true)
             }
         }
 
@@ -70,7 +70,7 @@ class TransactionStorage {
                 t.column(TransactionTagRecord.Columns.protocol.name, .text)
                 t.column(TransactionTagRecord.Columns.contractAddress.name, .blob)
 
-                t.foreignKey([TransactionTagRecord.Columns.transactionHash.name], references: Transaction.databaseTableName, columns: [Transaction.Columns.hash.name], onDelete: .cascade, onUpdate: .cascade, deferred: false)
+                t.foreignKey([TransactionTagRecord.Columns.transactionHash.name], references: Transaction.databaseTableName, columns: [Transaction.Columns.hash.name], onDelete: .cascade, onUpdate: .cascade, deferred: true)
             }
         }
 
