@@ -36,6 +36,10 @@ class SyncerStorage {
             }
         }
 
+        migrator.registerMigration("deleteTransactionSyncTimestamps") { db in
+            try TransactionSyncTimestamp.deleteAll(db)
+        }
+
         return migrator
     }
 
