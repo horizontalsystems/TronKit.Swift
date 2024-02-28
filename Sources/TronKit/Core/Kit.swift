@@ -117,6 +117,11 @@ extension Kit {
         )
     }
 
+    func tagTokens() -> [TagToken] {
+        transactionManager.tagTokens()
+    }
+
+
     public func send(contract: Contract, signer: Signer, feeLimit: Int? = 0) async throws  {
         let newTransaction = try await transactionSender.sendTransaction(contract: contract, signer: signer, feeLimit: feeLimit)
         transactionManager.handle(newTransaction: newTransaction)

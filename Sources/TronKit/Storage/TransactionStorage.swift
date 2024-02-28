@@ -74,6 +74,15 @@ class TransactionStorage {
             }
         }
 
+        migrator.registerMigration("add addresses to TransactionTagRecord") { db in
+            try Transaction.deleteAll(db)
+            try InternalTransaction.deleteAll(db)
+
+            try db.alter(table: TransactionTagRecord.databaseTableName) { t in
+                t.add(column: TransactionTagRecord.Columns.addresses.name, .text)
+            }
+        }
+
         return migrator
     }
 
@@ -244,4 +253,19 @@ extension TransactionStorage {
             _ = try Transaction.updateAll(db, [Transaction.Columns.processed.set(to: true)])
         }
     }
+
+    func tagTokens() throws -> [TagToken] {
+        try dbPool.read { db in
+            let request = TransactionTagRecord
+                .filter(TransactionTagRecord.Columns.protocol != nil)
+                .select(TransactionTagRecord.Columns.protocol, TransactionTagRecord.Columns.contractAddress)
+                .distinct()
+            let rows = try Row.fetchAll(db, request)
+
+            return rows.compactMap { row in
+                TagToken(protocol: row[0], contractAddress: row[1])
+            }
+        }
+    }
+
 }
