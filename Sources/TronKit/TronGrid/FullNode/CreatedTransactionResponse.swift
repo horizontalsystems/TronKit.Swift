@@ -1,10 +1,10 @@
 import Foundation
 import ObjectMapper
 
-struct CreatedTransactionResponse: ImmutableMappable {
-    let txID: Data
-    let rawData: TransactionResponse.RawData
-    let rawDataHex: Data
+public struct CreatedTransactionResponse: ImmutableMappable {
+    public let txID: Data
+    public let rawData: TransactionResponse.RawData
+    public let rawDataHex: Data
 
     public init(map: Map) throws {
         txID = try map.value("txID", using: HexDataTransform())

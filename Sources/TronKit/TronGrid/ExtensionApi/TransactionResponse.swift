@@ -5,7 +5,7 @@ protocol ITransactionResponse {
     var blockTimestamp: Int { get }
 }
 
-struct TransactionResponse: ImmutableMappable, ITransactionResponse {
+public struct TransactionResponse: ImmutableMappable, ITransactionResponse {
     let ret: [Ret]
     let signature: [String]
     let txId: Data
@@ -32,7 +32,7 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
         rawData = try map.value("raw_data")
     }
 
-    struct Ret: ImmutableMappable {
+    public struct Ret: ImmutableMappable {
         let contractRet: String
         let fee: Int
 
@@ -42,7 +42,7 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
         }
     }
 
-    struct RawData: ImmutableMappable {
+    public struct RawData: ImmutableMappable {
         let contract: Any?
         let refBlockBytes: String
         let refBlockHash: String

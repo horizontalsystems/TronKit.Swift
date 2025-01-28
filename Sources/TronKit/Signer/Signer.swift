@@ -7,7 +7,7 @@ import HsToolKit
 public class Signer {
     private let privateKey: Data
 
-    init(privateKey: Data) {
+    public init(privateKey: Data) {
         self.privateKey = privateKey
     }
 
