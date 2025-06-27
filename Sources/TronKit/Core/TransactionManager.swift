@@ -42,8 +42,8 @@ extension TransactionManager {
             .eraseToAnyPublisher()
     }
 
-    func fullTransactions(tagQueries: [TransactionTagQuery], fromHash: Data?, limit: Int?) -> [FullTransaction] {
-        let transactions = storage.transactionsBefore(tagQueries: tagQueries, hash: fromHash, limit: limit)
+    func fullTransactions(tagQueries: [TransactionTagQuery], hash: Data?, descending: Bool, limit: Int?) -> [FullTransaction] {
+        let transactions = storage.transactionsBefore(tagQueries: tagQueries, hash: hash, descending: descending, limit: limit)
         return decorationManager.decorate(transactions: transactions)
     }
 
