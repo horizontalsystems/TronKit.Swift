@@ -81,8 +81,8 @@ public extension Kit {
         transactionManager.fullTransactionsPublisher(tagQueries: tagQueries)
     }
 
-    func transactions(tagQueries: [TransactionTagQuery], fromHash: Data? = nil, limit: Int? = nil) -> [FullTransaction] {
-        transactionManager.fullTransactions(tagQueries: tagQueries, fromHash: fromHash, limit: limit)
+    func transactions(tagQueries: [TransactionTagQuery], hash: Data? = nil, descending: Bool, limit: Int? = nil) -> [FullTransaction] {
+        transactionManager.fullTransactions(tagQueries: tagQueries, hash: hash, descending: descending, limit: limit)
     }
 
     func estimateFee(contract: Contract) async throws -> [Fee] {

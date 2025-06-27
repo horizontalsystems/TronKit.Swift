@@ -39,8 +39,8 @@ open class UnknownTransactionDecoration: TransactionDecoration {
         if toAddress == userAddress {
             incomingValue = value
         }
-        incomingInternalTransactions.forEach {
-            incomingValue += $0.value
+        for incomingInternalTransaction in incomingInternalTransactions {
+            incomingValue += incomingInternalTransaction.value
         }
 
         // if has value or has internalTxs must add Evm tag

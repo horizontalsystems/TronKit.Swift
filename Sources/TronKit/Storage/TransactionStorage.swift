@@ -90,7 +90,7 @@ class TransactionStorage {
 }
 
 extension TransactionStorage {
-    func transactionsBefore(tagQueries: [TransactionTagQuery], hash: Data?, limit: Int?) -> [Transaction] {
+    func transactionsBefore(tagQueries: [TransactionTagQuery], hash: Data?, descending: Bool, limit: Int?) -> [Transaction] {
         try! dbPool.read { db in
             var arguments = [DatabaseValueConvertible]()
             var whereConditions: [String] = ["\(Transaction.Columns.processed) = 1"]
@@ -132,10 +132,10 @@ extension TransactionStorage {
             {
                 let fromCondition = """
                 (
-                 \(Transaction.Columns.timestamp.name) < ? OR
+                 \(Transaction.Columns.timestamp.name) \(descending ? "<" : ">") ? OR
                      (
                          \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) = ? AND
-                         \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) < ?
+                         \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) \(descending ? "<" : ">") ?
                      )
                 )
                 """
@@ -153,8 +153,8 @@ extension TransactionStorage {
             }
 
             let orderClause = """
-            ORDER BY \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) DESC,
-            \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) DESC
+            ORDER BY \(Transaction.databaseTableName).\(Transaction.Columns.timestamp.name) \(descending ? "DESC" : "ASC"),
+            \(Transaction.databaseTableName).\(Transaction.Columns.hash.name) \(descending ? "DESC" : "ASC")
             """
 
             let whereClause = whereConditions.count > 0 ? "WHERE \(whereConditions.joined(separator: " AND "))" : ""
