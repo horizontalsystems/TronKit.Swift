@@ -435,14 +435,29 @@ public struct TriggerSmartContract: Contract {
         ownerAddress = try map.value("owner_address", using: HexAddressTransform())
         contractAddress = try map.value("contract_address", using: HexAddressTransform())
         callValue = try map.value("call_value")
-        callTokenValue = try map.value("call_token_value")
-        tokenId = try map.value("token_id")
+        callTokenValue = try? map.value("call_token_value")
+        tokenId = try? map.value("token_id")
         functionSelector = nil
         parameter = nil
     }
 
     public func ownTransaction(ownAddress: Address) -> Bool {
         ownerAddress == ownAddress
+    }
+
+    public static func parse(contract: Any?) throws -> TriggerSmartContract? {
+        guard let contractArray = contract as? [[String: Any]],
+              let firstContract = contractArray.first,
+              let type = firstContract["type"] as? String,
+              type == "TriggerSmartContract",
+              let parameter = firstContract["parameter"] as? [String: Any],
+              let value = parameter["value"] as? [String: Any]
+        else {
+            return nil
+        }
+
+        let contractMap = Map(mappingType: .fromJSON, JSON: value)
+        return try TriggerSmartContract(map: contractMap)
     }
 }
 

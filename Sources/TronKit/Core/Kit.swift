@@ -8,6 +8,7 @@ import HsToolKit
 public class Kit {
     private let syncer: Syncer
     private let accountInfoManager: AccountInfoManager
+    private let allowanceManager: AllowanceManager
     private let transactionManager: TransactionManager
     private let transactionSender: TransactionSender
     private let feeProvider: FeeProvider
@@ -17,11 +18,12 @@ public class Kit {
     public let uniqueId: String
     public let logger: Logger
 
-    init(address: Address, network: Network, uniqueId: String, syncer: Syncer, accountInfoManager: AccountInfoManager, transactionManager: TransactionManager, transactionSender: TransactionSender, feeProvider: FeeProvider, logger: Logger) {
+    init(address: Address, network: Network, uniqueId: String, syncer: Syncer, accountInfoManager: AccountInfoManager, allowanceManager: AllowanceManager, transactionManager: TransactionManager, transactionSender: TransactionSender, feeProvider: FeeProvider, logger: Logger) {
         self.address = address
         self.network = network
         self.uniqueId = uniqueId
         self.accountInfoManager = accountInfoManager
+        self.allowanceManager = allowanceManager
         self.transactionManager = transactionManager
         self.transactionSender = transactionSender
         self.syncer = syncer
@@ -85,12 +87,28 @@ public extension Kit {
         transactionManager.fullTransactions(tagQueries: tagQueries, hash: hash, descending: descending, limit: limit)
     }
 
+    func pendingTransactions() -> [FullTransaction] {
+        transactionManager.pendingTransaction()
+    }
+
     func estimateFee(contract: Contract) async throws -> [Fee] {
         try await feeProvider.estimateFee(contract: contract)
     }
 
+    func estimateFee(createdTransaction: CreatedTransactionResponse) async throws -> [Fee] {
+        guard let contract = try TriggerSmartContract.parse(contract: createdTransaction.rawData.contract) else {
+            throw SendError.notSupportedContract
+        }
+
+        return try await estimateFee(contract: contract)
+    }
+
     func decorate(contract: Contract) -> TransactionDecoration? {
         transactionManager.decorate(contract: contract)
+    }
+
+    func allowance(contractAddress: Address, spenderAddress: Address) async throws -> String {
+        try await allowanceManager.allowance(contractAddress: contractAddress, spenderAddress: spenderAddress).description
     }
 
     func transferContract(toAddress: Address, value: Int) -> TransferContract {
@@ -114,6 +132,23 @@ public extension Kit {
         )
     }
 
+    func approveTrc20TriggerSmartContract(contractAddress: Address, spender: Address, amount: BigUInt) -> TriggerSmartContract {
+        let approveMethod = ApproveMethod(spender: spender, value: amount)
+        let data = approveMethod.encodedABI().hs.hex
+        let parameter = ContractMethodHelper.encodedABI(methodId: Data(), arguments: approveMethod.arguments).hs.hex
+
+        return TriggerSmartContract(
+            data: data,
+            ownerAddress: address,
+            contractAddress: contractAddress,
+            callValue: nil,
+            callTokenValue: nil,
+            tokenId: nil,
+            functionSelector: ApproveMethod.methodSignature,
+            parameter: parameter
+        )
+    }
+
     func tagTokens() -> [TagToken] {
         transactionManager.tagTokens()
     }
@@ -121,6 +156,11 @@ public extension Kit {
     func send(contract: Contract, signer: Signer, feeLimit: Int? = 0) async throws {
         let newTransaction = try await transactionSender.sendTransaction(contract: contract, signer: signer, feeLimit: feeLimit)
         transactionManager.handle(newTransaction: newTransaction)
+    }
+
+    func send(createdTransaction: CreatedTransactionResponse, signer: Signer) async throws {
+        try await transactionSender.broadcastTransaction(createdTransaction: createdTransaction, signer: signer)
+        transactionManager.handle(newTransaction: createdTransaction)
     }
 
     func accountActive(address: Address) async throws -> Bool {
@@ -178,11 +218,13 @@ public extension Kit {
         let syncTimer = SyncTimer(reachabilityManager: reachabilityManager, syncInterval: 30)
         let syncer = Syncer(accountInfoManager: accountInfoManager, transactionManager: transactionManager, chainParameterManager: chainParameterManager, syncTimer: syncTimer, tronGridProvider: tronGridProvider, storage: syncerStorage, address: address)
         let transactionSender = TransactionSender(tronGridProvider: tronGridProvider)
+        let allowanceManager = AllowanceManager(tronGridProvider: tronGridProvider, address: address)
 
         let kit = Kit(
             address: address, network: network, uniqueId: uniqueId,
             syncer: syncer,
             accountInfoManager: accountInfoManager,
+            allowanceManager: allowanceManager,
             transactionManager: transactionManager,
             transactionSender: transactionSender,
             feeProvider: feeProvider,

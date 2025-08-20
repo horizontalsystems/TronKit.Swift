@@ -258,6 +258,19 @@ extension TronGridProvider {
 
         _ = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, responseCacherBehavior: .doNotCache)
     }
+
+    func broadcastTransaction(createdTransaction: CreatedTransactionResponse, signature: Data) async throws {
+        let urlString = "\(baseUrl)wallet/broadcasttransaction"
+        let parameters: Parameters = [
+            "visible": createdTransaction.visible,
+            "txID": createdTransaction.txID,
+            "raw_data": createdTransaction.rawData,
+            "raw_data_hex": createdTransaction.rawDataHex,
+            "signature": [signature.hs.hexString],
+        ]
+
+        _ = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, responseCacherBehavior: .doNotCache)
+    }
 }
 
 extension TronGridProvider {
