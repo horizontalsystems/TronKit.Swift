@@ -39,7 +39,7 @@ extension TransactionSender {
         default: throw Kit.SendError.notSupportedContract
         }
 
-        let rawData = try Protocol_Transaction.raw(serializedData: createdTransaction.rawDataHex)
+        let rawData = try Protocol_Transaction.raw(serializedBytes: createdTransaction.rawDataHex)
 
         guard rawData.contract.count == 1,
               let contractMessage = rawData.contract.first,
@@ -57,5 +57,10 @@ extension TransactionSender {
         try await tronGridProvider.broadcastTransaction(hexData: transaction.serializedData())
 
         return createdTransaction
+    }
+
+    func broadcastTransaction(createdTransaction: CreatedTransactionResponse, signer: Signer) async throws {
+        let signature = try signer.signature(hash: createdTransaction.txID)
+        return try await tronGridProvider.broadcastTransaction(createdTransaction: createdTransaction, signature: signature)
     }
 }

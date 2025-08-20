@@ -181,6 +181,12 @@ extension TransactionStorage {
         }
     }
 
+    func pendingTransactions() -> [Transaction] {
+        try! dbPool.read { db in
+            try Transaction.filter(Transaction.Columns.blockNumber == nil).fetchAll(db)
+        }
+    }
+
     func lastInternalTransaction() -> InternalTransaction? {
         try! dbPool.read { db in
             try InternalTransaction

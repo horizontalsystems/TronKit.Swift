@@ -47,6 +47,11 @@ extension TransactionManager {
         return decorationManager.decorate(transactions: transactions)
     }
 
+    func pendingTransaction() -> [FullTransaction] {
+        let transactions = storage.pendingTransactions()
+        return decorationManager.decorate(transactions: transactions)
+    }
+
     func decorate(contract: Contract) -> TransactionDecoration? {
         decorationManager.decorateTransaction(contract: contract)
     }
