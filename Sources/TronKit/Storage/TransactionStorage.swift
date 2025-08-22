@@ -183,7 +183,7 @@ extension TransactionStorage {
 
     func pendingTransactions() -> [Transaction] {
         try! dbPool.read { db in
-            try Transaction.filter(Transaction.Columns.blockNumber == nil).fetchAll(db)
+            try Transaction.filter(Transaction.Columns.confirmed == false).fetchAll(db)
         }
     }
 
