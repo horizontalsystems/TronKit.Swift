@@ -67,6 +67,10 @@ public extension Kit {
         accountInfoManager.trxBalancePublisher
     }
 
+    var accountActivePublisher: AnyPublisher<Bool, Never> {
+        accountInfoManager.accountActivePublisher
+    }
+
     var allTransactionsPublisher: AnyPublisher<([FullTransaction], Bool), Never> {
         transactionManager.fullTransactionsPublisher
     }

@@ -12,11 +12,17 @@ class AccountInfoManager {
     private let trxBalanceSubject = PassthroughSubject<BigUInt, Never>()
     private let trc20BalanceSubject = PassthroughSubject<(Address, BigUInt), Never>()
 
+    private let accountActiveSubject = PassthroughSubject<Bool, Never>()
+
     var trxBalance: BigUInt {
         storage.trxBalance ?? 0
     }
 
-    var accountActive: Bool = true
+    var accountActive: Bool = true {
+        didSet {
+            accountActiveSubject.send(accountActive)
+        }
+    }
 }
 
 extension AccountInfoManager {
@@ -30,6 +36,10 @@ extension AccountInfoManager {
 
     func trc20BalancePublisher(contractAddress: Address) -> AnyPublisher<BigUInt, Never> {
         trc20BalanceSubject.filter { $0.0 == contractAddress }.map(\.1).eraseToAnyPublisher()
+    }
+
+    var accountActivePublisher: AnyPublisher<Bool, Never> {
+        accountActiveSubject.eraseToAnyPublisher()
     }
 
     func handle(accountInfoResponse: AccountInfoResponse) {
