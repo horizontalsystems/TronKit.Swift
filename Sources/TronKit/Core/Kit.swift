@@ -100,7 +100,7 @@ public extension Kit {
     }
 
     func estimateFee(createdTransaction: CreatedTransactionResponse) async throws -> [Fee] {
-        guard let contract = try TriggerSmartContract.parse(contract: createdTransaction.rawData.contract) else {
+        guard let contract = try? ContractHelper.contractsFrom(jsonMap: createdTransaction.rawData.contract).first else {
             throw SendError.notSupportedContract
         }
 
