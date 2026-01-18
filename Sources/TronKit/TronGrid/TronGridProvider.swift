@@ -262,10 +262,10 @@ extension TronGridProvider {
     func broadcastTransaction(createdTransaction: CreatedTransactionResponse, signature: Data) async throws {
         let urlString = "\(baseUrl)wallet/broadcasttransaction"
         let parameters: Parameters = [
-            "visible": createdTransaction.visible,
-            "txID": createdTransaction.txID,
-            "raw_data": createdTransaction.rawData,
-            "raw_data_hex": createdTransaction.rawDataHex,
+            "visible": createdTransaction.visible ?? false,
+            "txID": createdTransaction.txID.hs.hex,
+            "raw_data": createdTransaction.rawDataMap,
+            "raw_data_hex": createdTransaction.rawDataHex.hs.hex,
             "signature": [signature.hs.hexString],
         ]
 
