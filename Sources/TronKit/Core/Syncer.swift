@@ -102,7 +102,11 @@ extension Syncer: ISyncTimerDelegate {
                 self?.lastBlockHeight = newLastBlockHeight
 
                 if let historyProvider {
-                    try await syncer.syncAccountViaHistory(address: address.base58, historyProvider: historyProvider)
+                    do {
+                        try await syncer.syncAccountViaHistory(address: address.base58, historyProvider: historyProvider)
+                    } catch {
+                        try await syncer.syncAccountViaRpc(address: address.base58, rpcApiProvider: rpcApiProvider, nodeApiProvider: nodeApiProvider)
+                    }
                 } else {
                     try await syncer.syncAccountViaRpc(address: address.base58, rpcApiProvider: rpcApiProvider, nodeApiProvider: nodeApiProvider)
                 }
