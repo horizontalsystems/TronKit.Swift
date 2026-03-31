@@ -8,11 +8,11 @@ enum AllowanceParsingError: Error {
 }
 
 class AllowanceManager {
-    private let tronGridProvider: TronGridProvider
+    private let rpcApiProvider: IRpcApiProvider
     private let address: Address
 
-    init(tronGridProvider: TronGridProvider, address: Address) {
-        self.tronGridProvider = tronGridProvider
+    init(rpcApiProvider: IRpcApiProvider, address: Address) {
+        self.rpcApiProvider = rpcApiProvider
         self.address = address
     }
 
@@ -20,7 +20,7 @@ class AllowanceManager {
         let methodData = AllowanceMethod(owner: address, spender: spenderAddress).encodedABI()
 
         let callJsonRpc = CallJsonRpc(contractAddress: contractAddress, data: methodData)
-        let response: Data = try await tronGridProvider.fetch(rpc: callJsonRpc)
+        let response: Data = try await rpcApiProvider.fetch(rpc: callJsonRpc)
         guard response.count >= 32 else {
             throw AllowanceParsingError.illegalResponse
         }

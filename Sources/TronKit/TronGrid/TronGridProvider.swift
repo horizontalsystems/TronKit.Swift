@@ -11,14 +11,19 @@ class TronGridProvider {
     private var currentRpcId = 0
     private let pageLimit = 200
 
-    init(networkManager: NetworkManager, baseUrl: String, apiKey: String?) {
+    init(networkManager: NetworkManager, baseUrl: String, apiKey: String?, auth: String? = nil) {
         self.networkManager = networkManager
-        self.baseUrl = baseUrl
+        self.baseUrl = baseUrl.hasSuffix("/") ? baseUrl : baseUrl + "/"
 
         var headers = HTTPHeaders()
 
         if let apiKey {
             headers.add(.init(name: "TRON-PRO-API-KEY", value: apiKey))
+        }
+
+        if let auth {
+            let base64 = Data(auth.utf8).base64EncodedString()
+            headers.add(.init(name: "Authorization", value: "Basic \(base64)"))
         }
 
         self.headers = headers
@@ -37,9 +42,7 @@ class TronGridProvider {
     }
 
     private func extensionApiFetch(path: String, parameters: Parameters) async throws -> (data: [[String: Any]], meta: [String: Any]) {
-        let urlString = "\(baseUrl)\(path)"
-
-        let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: parameters, headers: headers, responseCacherBehavior: .doNotCache)
+        let json = try await networkManager.fetchJson(url: "\(baseUrl)\(path)", method: .get, parameters: parameters, headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
             throw RequestError.invalidResponse
@@ -60,14 +63,18 @@ class TronGridProvider {
         return (data, meta)
     }
 
-    private func requestNodeApiFetch(path: String, parameters: Parameters) async throws -> [String: Any] {
-        let urlString = "\(baseUrl)\(path)"
-
-        let json = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers, responseCacherBehavior: .doNotCache)
+    private func nodeApiFetch(path: String, parameters: Parameters) async throws -> [String: Any] {
+        let json = try await networkManager.fetchJson(url: "\(baseUrl)\(path)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
             throw RequestError.invalidResponse
         }
+
+        return map
+    }
+
+    private func nodeApiFetchChecked(path: String, parameters: Parameters) async throws -> [String: Any] {
+        let map = try await nodeApiFetch(path: path, parameters: parameters)
 
         guard let resultMap = map["result"] as? [String: Any],
               let successResult = resultMap["result"] as? Bool
@@ -106,7 +113,11 @@ extension TronGridProvider {
     var source: String {
         baseUrl
     }
+}
 
+// MARK: - IRpcApiProvider
+
+extension TronGridProvider: IRpcApiProvider {
     func fetch<T>(rpc: JsonRpc<T>) async throws -> T {
         currentRpcId += 1
 
@@ -118,89 +129,28 @@ extension TronGridProvider {
 
         return try rpc.parse(response: rpcResponse)
     }
+}
 
-    func fetchAccountInfo(address: String) async throws -> AccountInfoResponse {
-        let result = try await extensionApiFetch(path: "v1/accounts/\(address)", parameters: [:])
+// MARK: - INodeApiProvider
 
-        guard !result.data.isEmpty else {
-            throw RequestError.failedToFetchAccountInfo
+extension TronGridProvider: INodeApiProvider {
+    func fetchAccount(address: String) async throws -> NodeAccountResponse? {
+        let map = try await nodeApiFetch(path: "wallet/getaccount", parameters: ["address": address, "visible": true])
+
+        // Empty object {} or missing balance means account does not exist / is inactive
+        guard let balance = map["balance"] as? Int else {
+            return nil
         }
 
-        return try AccountInfoResponse(JSON: result.data[0])
-    }
-
-    func fetchTransactions(address: String, minTimestamp: Int, fingerprint: String?) async throws -> (transactions: [ITransactionResponse], fingerprint: String?, completed: Bool) {
-        let path = "v1/accounts/\(address)/\(ApiPath.transactions.rawValue)"
-        var parameters: Parameters = [
-            "only_confirmed": true,
-            "order_by": "block_timestamp,asc",
-            "limit": pageLimit,
-            "min_timestamp": minTimestamp,
-        ]
-
-        fingerprint.flatMap { parameters["fingerprint"] = $0 }
-
-        let result = try await extensionApiFetch(path: path, parameters: parameters)
-        let transactions = result.data.compactMap { json -> ITransactionResponse? in
-            if json["internal_tx_id"] is String {
-                return try? InternalTransactionResponse(JSON: json)
-            } else {
-                return try? TransactionResponse(JSON: json)
-            }
-        }
-
-        let newFingerprint = result.meta["fingerprint"] as? String
-        let completed = transactions.count < pageLimit
-
-        return (transactions: transactions, fingerprint: newFingerprint, completed: completed)
-    }
-
-    func fetchTrc20Transactions(address: String, minTimestamp: Int, fingerprint: String?) async throws -> (transactions: [Trc20TransactionResponse], fingerprint: String?, completed: Bool) {
-        let path = "v1/accounts/\(address)/\(ApiPath.transactionsTrc20.rawValue)"
-        var parameters: Parameters = [
-            "only_confirmed": true,
-            "order_by": "block_timestamp,asc",
-            "limit": pageLimit,
-            "min_timestamp": minTimestamp,
-        ]
-
-        fingerprint.flatMap { parameters["fingerprint"] = $0 }
-
-        let result = try await extensionApiFetch(path: path, parameters: parameters)
-        let transactions = result.data.compactMap { try? Trc20TransactionResponse(JSON: $0) }
-        let fingerprint = result.meta["fingerprint"] as? String
-        let completed = transactions.count < pageLimit
-
-        return (transactions: transactions, fingerprint: fingerprint, completed: completed)
-    }
-
-    func estimateEnergy(ownerAddress: String, contractAddress: String, functionSelector: String, parameter: String) async throws -> Int {
-        let path = "wallet/estimateenergy"
-        let parameters: Parameters = [
-            "owner_address": ownerAddress,
-            "contract_address": contractAddress,
-            "function_selector": functionSelector,
-            "parameter": parameter,
-        ]
-
-        let result = try await requestNodeApiFetch(path: path, parameters: parameters)
-
-        guard let energyRequired = result["energy_required"] as? Int else {
-            throw RequestError.invalidResponse
-        }
-
-        return energyRequired
+        return NodeAccountResponse(balance: BigUInt(balance))
     }
 
     func fetchChainParameters() async throws -> [ChainParameterResponse] {
-        let urlString = "\(baseUrl)wallet/getchainparameters"
-        let json = try await networkManager.fetchJson(url: urlString, method: .get, parameters: [:], responseCacherBehavior: .doNotCache)
+        let json = try await networkManager.fetchJson(url: "\(baseUrl)wallet/getchainparameters", method: .get, parameters: [:], headers: headers, responseCacherBehavior: .doNotCache)
 
-        guard let map = json as? [String: Any] else {
-            throw RequestError.invalidResponse
-        }
-
-        guard let chainParameter = map["chainParameter"] as? [[String: Any]] else {
+        guard let map = json as? [String: Any],
+              let chainParameter = map["chainParameter"] as? [[String: Any]]
+        else {
             throw RequestError.invalidResponse
         }
 
@@ -208,13 +158,14 @@ extension TronGridProvider {
     }
 
     func createTransaction(ownerAddress: String, toAddress: String, amount: Int) async throws -> CreatedTransactionResponse {
-        let urlString = "\(baseUrl)wallet/createtransaction"
-        let parameters: Parameters = [
-            "owner_address": ownerAddress,
-            "to_address": toAddress,
-            "amount": amount,
-        ]
-        let json = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, responseCacherBehavior: .doNotCache)
+        let json = try await networkManager.fetchJson(
+            url: "\(baseUrl)wallet/createtransaction",
+            method: .post,
+            parameters: ["owner_address": ownerAddress, "to_address": toAddress, "amount": amount],
+            encoding: JSONEncoding.default,
+            headers: headers,
+            responseCacherBehavior: .doNotCache
+        )
 
         guard let map = json as? [String: Any] else {
             throw RequestError.invalidResponse
@@ -228,7 +179,6 @@ extension TronGridProvider {
         callValue: Int? = nil, callTokenValue: Int? = nil, tokenId: Int? = nil,
         feeLimit: Int
     ) async throws -> CreatedTransactionResponse {
-        let path = "wallet/triggersmartcontract"
         var parameters: Parameters = [
             "owner_address": ownerAddress,
             "contract_address": contractAddress,
@@ -241,7 +191,7 @@ extension TronGridProvider {
         callTokenValue.flatMap { parameters["call_token_value"] = $0 }
         tokenId.flatMap { parameters["token_id"] = $0 }
 
-        let json = try await requestNodeApiFetch(path: path, parameters: parameters)
+        let json = try await nodeApiFetchChecked(path: "wallet/triggersmartcontract", parameters: parameters)
 
         guard let transactionMap = json["transaction"] as? [String: Any] else {
             throw RequestError.invalidResponse
@@ -251,25 +201,104 @@ extension TronGridProvider {
     }
 
     func broadcastTransaction(hexData: Data) async throws {
-        let urlString = "\(baseUrl)wallet/broadcasthex"
-        let parameters: Parameters = [
-            "transaction": hexData.hs.hex,
-        ]
-
-        _ = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, responseCacherBehavior: .doNotCache)
+        _ = try await networkManager.fetchJson(
+            url: "\(baseUrl)wallet/broadcasthex",
+            method: .post,
+            parameters: ["transaction": hexData.hs.hex],
+            encoding: JSONEncoding.default,
+            headers: headers,
+            responseCacherBehavior: .doNotCache
+        )
     }
 
     func broadcastTransaction(createdTransaction: CreatedTransactionResponse, signature: Data) async throws {
-        let urlString = "\(baseUrl)wallet/broadcasttransaction"
-        let parameters: Parameters = [
-            "visible": createdTransaction.visible ?? false,
-            "txID": createdTransaction.txID.hs.hex,
-            "raw_data": createdTransaction.rawDataMap,
-            "raw_data_hex": createdTransaction.rawDataHex.hs.hex,
-            "signature": [signature.hs.hexString],
+        _ = try await networkManager.fetchJson(
+            url: "\(baseUrl)wallet/broadcasttransaction",
+            method: .post,
+            parameters: [
+                "visible": createdTransaction.visible ?? false,
+                "txID": createdTransaction.txID.hs.hex,
+                "raw_data": createdTransaction.rawDataMap,
+                "raw_data_hex": createdTransaction.rawDataHex.hs.hex,
+                "signature": [signature.hs.hexString],
+            ],
+            encoding: JSONEncoding.default,
+            headers: headers,
+            responseCacherBehavior: .doNotCache
+        )
+    }
+
+    func estimateEnergy(ownerAddress: String, contractAddress: String, functionSelector: String, parameter: String) async throws -> Int {
+        let result = try await nodeApiFetchChecked(
+            path: "wallet/estimateenergy",
+            parameters: [
+                "owner_address": ownerAddress,
+                "contract_address": contractAddress,
+                "function_selector": functionSelector,
+                "parameter": parameter,
+            ]
+        )
+
+        guard let energyRequired = result["energy_required"] as? Int else {
+            throw RequestError.invalidResponse
+        }
+
+        return energyRequired
+    }
+}
+
+// MARK: - IHistoryProvider
+
+extension TronGridProvider: IHistoryProvider {
+    func fetchAccountInfo(address: String) async throws -> AccountInfoResponse {
+        let result = try await extensionApiFetch(path: "v1/accounts/\(address)", parameters: [:])
+
+        guard !result.data.isEmpty else {
+            throw RequestError.failedToFetchAccountInfo
+        }
+
+        return try AccountInfoResponse(JSON: result.data[0])
+    }
+
+    func fetchTransactions(address: String, minTimestamp: Int, cursor: String?) async throws -> ([ITransactionResponse], nextCursor: String?) {
+        let path = "v1/accounts/\(address)/transactions"
+        var parameters: Parameters = [
+            "only_confirmed": true,
+            "order_by": "block_timestamp,asc",
+            "limit": pageLimit,
+            "min_timestamp": minTimestamp,
         ]
 
-        _ = try await networkManager.fetchJson(url: urlString, method: .post, parameters: parameters, encoding: JSONEncoding.default, responseCacherBehavior: .doNotCache)
+        cursor.flatMap { parameters["fingerprint"] = $0 }
+
+        let result = try await extensionApiFetch(path: path, parameters: parameters)
+        let transactions = result.data.compactMap { json -> ITransactionResponse? in
+            if json["internal_tx_id"] is String {
+                return try? InternalTransactionResponse(JSON: json)
+            } else {
+                return try? TransactionResponse(JSON: json)
+            }
+        }
+
+        let nextCursor: String? = transactions.count < pageLimit ? nil : (result.meta["fingerprint"] as? String)
+        return (transactions, nextCursor)
+    }
+
+    func fetchTrc20Transactions(address: String, minTimestamp: Int, cursor: String?) async throws -> ([Trc20TransactionResponse], nextCursor: String?) {
+        let path = "v1/accounts/\(address)/transactions/trc20"
+        var parameters: Parameters = [
+            "only_confirmed": true,
+            "order_by": "block_timestamp,asc",
+            "limit": pageLimit,
+            "min_timestamp": minTimestamp,
+        ]
+
+        cursor.flatMap { parameters["fingerprint"] = $0 }
+
+        let result = try await extensionApiFetch(path: path, parameters: parameters)
+        let transactions = result.data.compactMap { try? Trc20TransactionResponse(JSON: $0) }
+        let nextCursor: String? = transactions.count < pageLimit ? nil : (result.meta["fingerprint"] as? String)
+        return (transactions, nextCursor)
     }
 }
 
@@ -279,12 +308,5 @@ extension TronGridProvider {
         case invalidStatus
         case failedToFetchAccountInfo
         case fullNodeApiError(code: String, message: String)
-    }
-}
-
-extension TronGridProvider {
-    enum ApiPath: String {
-        case transactions
-        case transactionsTrc20 = "transactions/trc20"
     }
 }

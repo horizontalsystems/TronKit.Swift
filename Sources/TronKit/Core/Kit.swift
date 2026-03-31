@@ -7,6 +7,7 @@ import HsToolKit
 
 public class Kit {
     private let syncer: Syncer
+    private let transactionSyncer: TransactionSyncer?
     private let accountInfoManager: AccountInfoManager
     private let allowanceManager: AllowanceManager
     private let transactionManager: TransactionManager
@@ -18,21 +19,32 @@ public class Kit {
     public let uniqueId: String
     public let logger: Logger
 
-    init(address: Address, network: Network, uniqueId: String, syncer: Syncer, accountInfoManager: AccountInfoManager, allowanceManager: AllowanceManager, transactionManager: TransactionManager, transactionSender: TransactionSender, feeProvider: FeeProvider, logger: Logger) {
+    init(
+        address: Address, network: Network, uniqueId: String,
+        syncer: Syncer,
+        transactionSyncer: TransactionSyncer?,
+        accountInfoManager: AccountInfoManager,
+        allowanceManager: AllowanceManager,
+        transactionManager: TransactionManager,
+        transactionSender: TransactionSender,
+        feeProvider: FeeProvider,
+        logger: Logger
+    ) {
         self.address = address
         self.network = network
         self.uniqueId = uniqueId
+        self.syncer = syncer
+        self.transactionSyncer = transactionSyncer
         self.accountInfoManager = accountInfoManager
         self.allowanceManager = allowanceManager
         self.transactionManager = transactionManager
         self.transactionSender = transactionSender
-        self.syncer = syncer
         self.feeProvider = feeProvider
         self.logger = logger
     }
 }
 
-// Public API Extension
+// MARK: - Public API
 
 public extension Kit {
     var lastBlockHeight: Int? {
@@ -41,6 +53,10 @@ public extension Kit {
 
     var syncState: SyncState {
         syncer.state
+    }
+
+    var transactionsSyncState: SyncState {
+        transactionSyncer?.state ?? .notSynced(error: SyncError.noTransactionSource)
     }
 
     var accountActive: Bool {
@@ -61,6 +77,13 @@ public extension Kit {
 
     var syncStatePublisher: AnyPublisher<SyncState, Never> {
         syncer.$state.eraseToAnyPublisher()
+    }
+
+    var transactionsSyncStatePublisher: AnyPublisher<SyncState, Never> {
+        if let transactionSyncer {
+            return transactionSyncer.$state.eraseToAnyPublisher()
+        }
+        return Just(.notSynced(error: SyncError.noTransactionSource)).eraseToAnyPublisher()
     }
 
     var trxBalancePublisher: AnyPublisher<BigUInt, Never> {
@@ -103,7 +126,6 @@ public extension Kit {
         guard let contract = try? ContractHelper.contractsFrom(jsonMap: createdTransaction.rawData.contract).first else {
             throw SendError.notSupportedContract
         }
-
         return try await estimateFee(contract: contract)
     }
 
@@ -125,14 +147,9 @@ public extension Kit {
         let parameter = ContractMethodHelper.encodedABI(methodId: Data(), arguments: transferMethod.arguments).hs.hex
 
         return TriggerSmartContract(
-            data: data,
-            ownerAddress: address,
-            contractAddress: contractAddress,
-            callValue: nil,
-            callTokenValue: nil,
-            tokenId: nil,
-            functionSelector: TransferMethod.methodSignature,
-            parameter: parameter
+            data: data, ownerAddress: address, contractAddress: contractAddress,
+            callValue: nil, callTokenValue: nil, tokenId: nil,
+            functionSelector: TransferMethod.methodSignature, parameter: parameter
         )
     }
 
@@ -142,15 +159,14 @@ public extension Kit {
         let parameter = ContractMethodHelper.encodedABI(methodId: Data(), arguments: approveMethod.arguments).hs.hex
 
         return TriggerSmartContract(
-            data: data,
-            ownerAddress: address,
-            contractAddress: contractAddress,
-            callValue: nil,
-            callTokenValue: nil,
-            tokenId: nil,
-            functionSelector: ApproveMethod.methodSignature,
-            parameter: parameter
+            data: data, ownerAddress: address, contractAddress: contractAddress,
+            callValue: nil, callTokenValue: nil, tokenId: nil,
+            functionSelector: ApproveMethod.methodSignature, parameter: parameter
         )
+    }
+
+    func watchTrc20(contractAddress: Address) {
+        accountInfoManager.watchTrc20(contractAddress: contractAddress)
     }
 
     func tagTokens() -> [TagToken] {
@@ -173,20 +189,25 @@ public extension Kit {
 
     func start() {
         syncer.start()
+        transactionSyncer?.sync()
     }
 
     func stop() {
         syncer.stop()
+        transactionSyncer?.stop()
     }
 
     func refresh() {
         syncer.refresh()
+        transactionSyncer?.sync()
     }
 
     func fetchTransaction(hash _: Data) async throws -> FullTransaction {
         throw SyncError.notStarted
     }
 }
+
+// MARK: - Factory
 
 public extension Kit {
     static func clear(exceptFor excludedFiles: [String]) throws {
@@ -200,11 +221,36 @@ public extension Kit {
         }
     }
 
-    static func instance(address: Address, network: Network, walletId: String, apiKey: String?, minLogLevel: Logger.Level = .error) throws -> Kit {
+    static func instance(
+        address: Address,
+        network: Network,
+        walletId: String,
+        rpcSource: RpcSource,
+        transactionSource: TransactionSource?,
+        minLogLevel: Logger.Level = .error
+    ) throws -> Kit {
         let logger = Logger(minLogLevel: minLogLevel)
         let uniqueId = "\(walletId)-\(network.rawValue)"
-
         let networkManager = NetworkManager(logger: logger)
+
+        // Build RPC + Node provider from RpcSource
+        let tronProvider = TronGridProvider(
+            networkManager: networkManager,
+            baseUrl: rpcSource.urls[0].absoluteString,
+            apiKey: rpcSource.apiKey,
+            auth: rpcSource.auth
+        )
+
+        // Build history provider from TransactionSource
+        let historyProvider: IHistoryProvider? = transactionSource.map { source in
+            switch source.type {
+            case let .tronGrid(url, apiKey):
+                return TronGridProvider(networkManager: networkManager, baseUrl: url.absoluteString, apiKey: apiKey)
+            case let .tronScan(url, apiKey):
+                return TronScanProvider(networkManager: networkManager, baseUrl: url.absoluteString, apiKey: apiKey)
+            }
+        }
+
         let reachabilityManager = ReachabilityManager()
         let databaseDirectoryUrl = try dataDirectoryUrl()
         let syncerStorage = SyncerStorage(databaseDirectoryUrl: databaseDirectoryUrl, databaseFileName: "syncer-state-storage-\(uniqueId)")
@@ -215,18 +261,32 @@ public extension Kit {
         let decorationManager = DecorationManager(userAddress: address, storage: transactionStorage)
         let transactionManager = TransactionManager(userAddress: address, storage: transactionStorage, decorationManager: decorationManager)
 
-        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: providerUrl(network: network), apiKey: apiKey)
-        let chainParameterManager = ChainParameterManager(tronGridProvider: tronGridProvider, storage: syncerStorage)
-        let feeProvider = FeeProvider(tronGridProvider: tronGridProvider, chainParameterManager: chainParameterManager)
+        let chainParameterManager = ChainParameterManager(nodeApiProvider: tronProvider, storage: syncerStorage)
+        let feeProvider = FeeProvider(rpcApiProvider: tronProvider, nodeApiProvider: tronProvider, chainParameterManager: chainParameterManager)
 
         let syncTimer = SyncTimer(reachabilityManager: reachabilityManager, syncInterval: 30)
-        let syncer = Syncer(accountInfoManager: accountInfoManager, transactionManager: transactionManager, chainParameterManager: chainParameterManager, syncTimer: syncTimer, tronGridProvider: tronGridProvider, storage: syncerStorage, address: address)
-        let transactionSender = TransactionSender(tronGridProvider: tronGridProvider)
-        let allowanceManager = AllowanceManager(tronGridProvider: tronGridProvider, address: address)
+        let syncer = Syncer(
+            accountInfoManager: accountInfoManager,
+            chainParameterManager: chainParameterManager,
+            syncTimer: syncTimer,
+            rpcApiProvider: tronProvider,
+            nodeApiProvider: tronProvider,
+            historyProvider: historyProvider,
+            storage: syncerStorage,
+            address: address
+        )
+
+        let transactionSyncer = historyProvider.map {
+            TransactionSyncer(historyProvider: $0, transactionManager: transactionManager, storage: syncerStorage, address: address)
+        }
+
+        let transactionSender = TransactionSender(nodeApiProvider: tronProvider)
+        let allowanceManager = AllowanceManager(rpcApiProvider: tronProvider, address: address)
 
         let kit = Kit(
             address: address, network: network, uniqueId: uniqueId,
             syncer: syncer,
+            transactionSyncer: transactionSyncer,
             accountInfoManager: accountInfoManager,
             allowanceManager: allowanceManager,
             transactionManager: transactionManager,
@@ -241,37 +301,27 @@ public extension Kit {
     }
 
     static func call(networkManager: NetworkManager, network: Network, contractAddress: Address, data: Data, apiKey: String?) async throws -> Data {
-        let tronGridProvider = TronGridProvider(networkManager: networkManager, baseUrl: providerUrl(network: network), apiKey: apiKey)
-        let rpc = CallJsonRpc(contractAddress: contractAddress, data: data)
-
-        return try await tronGridProvider.fetch(rpc: rpc)
+        let provider = TronGridProvider(networkManager: networkManager, baseUrl: network.tronGridUrl, apiKey: apiKey)
+        return try await provider.fetch(rpc: CallJsonRpc(contractAddress: contractAddress, data: data))
     }
 
     private static func dataDirectoryUrl() throws -> URL {
         let fileManager = FileManager.default
-
         let url = try fileManager
             .url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("tron-kit", isDirectory: true)
-
         try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
-
         return url
     }
-
-    private static func providerUrl(network: Network) -> String {
-        switch network {
-        case .mainNet: return "https://api.trongrid.io/"
-        case .nileTestnet: return "https://nile.trongrid.io/"
-        case .shastaTestnet: return "https://api.shasta.trongrid.io/"
-        }
-    }
 }
+
+// MARK: - Error Types
 
 public extension Kit {
     enum SyncError: Error {
         case notStarted
         case noNetworkConnection
+        case noTransactionSource
     }
 
     enum SendError: Error {

@@ -25,7 +25,8 @@ class Manager {
             address: address,
             network: configuration.network,
             walletId: "walletId",
-            apiKey: nil,
+            rpcSource: .tronGrid(network: configuration.network, apiKey: configuration.tronGridApiKey),
+            transactionSource: .tronGrid(network: configuration.network, apiKey: configuration.tronGridApiKey),
             minLogLevel: configuration.minLogLevel
         )
 

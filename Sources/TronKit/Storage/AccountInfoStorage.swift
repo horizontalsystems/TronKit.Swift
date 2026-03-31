@@ -63,4 +63,15 @@ extension AccountInfoStorage {
             try Balance.filter(Balance.Columns.id != trxId).deleteAll(db)
         }
     }
+
+    func allTrc20Addresses() -> [String] {
+        let prefix = "trc20/"
+        return (try! dbPool.read { db in
+            try Balance.filter(Balance.Columns.id != trxId).fetchAll(db)
+        }).compactMap { balance in
+            guard balance.id.hasPrefix(prefix) else { return nil }
+            return String(balance.id.dropFirst(prefix.count))
+        }
+    }
+
 }

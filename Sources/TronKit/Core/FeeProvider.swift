@@ -3,11 +3,13 @@ import Foundation
 import SwiftProtobuf
 
 class FeeProvider {
-    private let tronGridProvider: TronGridProvider
+    private let rpcApiProvider: IRpcApiProvider
+    private let nodeApiProvider: INodeApiProvider
     private let chainParameterManager: ChainParameterManager
 
-    init(tronGridProvider: TronGridProvider, chainParameterManager: ChainParameterManager) {
-        self.tronGridProvider = tronGridProvider
+    init(rpcApiProvider: IRpcApiProvider, nodeApiProvider: INodeApiProvider, chainParameterManager: ChainParameterManager) {
+        self.rpcApiProvider = rpcApiProvider
+        self.nodeApiProvider = nodeApiProvider
         self.chainParameterManager = chainParameterManager
     }
 
@@ -19,16 +21,7 @@ class FeeProvider {
     }
 
     func isAccountActive(address: Address) async throws -> Bool {
-        do {
-            _ = try await tronGridProvider.fetchAccountInfo(address: address.base58)
-            return true
-        } catch let error as TronGridProvider.RequestError {
-            guard case .failedToFetchAccountInfo = error else {
-                throw error
-            }
-
-            return false
-        }
+        return try await nodeApiProvider.fetchAccount(address: address.base58) != nil
     }
 }
 
@@ -50,7 +43,7 @@ extension FeeProvider {
 
         case let contract as TriggerSmartContract:
             let energyPrice = chainParameterManager.energyFee
-            let energyRequired = try await tronGridProvider.fetch(
+            let energyRequired = try await rpcApiProvider.fetch(
                 rpc: EstimateGasJsonRpc(
                     from: contract.ownerAddress,
                     to: contract.contractAddress,
@@ -87,7 +80,7 @@ extension FeeProvider {
         transaction.rawData = rawData
         transaction.signature = [Data(repeating: 0, count: 65)]
 
-        let bandwidthPoints = try transaction.serializedData().count + 64 // transaction + 64 (maximum ret size)
+        let bandwidthPoints = try transaction.serializedData().count + 64
         let bandwidthPointPrice = chainParameterManager.transactionFee
         fees.append(.bandwidth(points: bandwidthPoints, price: bandwidthPointPrice))
 

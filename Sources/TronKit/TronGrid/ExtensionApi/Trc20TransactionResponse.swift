@@ -20,6 +20,16 @@ struct Trc20TransactionResponse: ImmutableMappable {
         type = try map.value("type")
         value = try map.value("value", using: StringBigUIntTransform())
     }
+
+    init(transactionId: Data, blockTimestamp: Int, from: Address, to: Address, type: String, value: BigUInt, tokenInfo: TokenInfo) {
+        self.transactionId = transactionId
+        self.blockTimestamp = blockTimestamp
+        self.from = from
+        self.to = to
+        self.type = type
+        self.value = value
+        self.tokenInfo = tokenInfo
+    }
 }
 
 extension Trc20TransactionResponse {
@@ -34,6 +44,13 @@ extension Trc20TransactionResponse {
             address = try map.value("address", using: StringAddressTransform())
             decimals = try map.value("decimals")
             name = try map.value("name")
+        }
+
+        init(symbol: String, address: Address, decimals: Int, name: String) {
+            self.symbol = symbol
+            self.address = address
+            self.decimals = decimals
+            self.name = name
         }
     }
 }

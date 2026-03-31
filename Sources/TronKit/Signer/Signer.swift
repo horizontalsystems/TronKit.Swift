@@ -22,7 +22,7 @@ public extension Signer {
     }
 
     static func instance(privateKey: Data) throws -> Signer {
-        try Signer(privateKey: privateKey)
+        Signer(privateKey: privateKey)
     }
 
     static func address(seed: Data) throws -> Address {

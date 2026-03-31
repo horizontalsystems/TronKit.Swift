@@ -32,6 +32,22 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
         rawData = try map.value("raw_data")
     }
 
+    init(txId: Data, blockTimestamp: Int, blockNumber: Int, ret: [Ret],
+         netUsage: Int, netFee: Int, energyUsage: Int, energyFee: Int, energyUsageTotal: Int,
+         contractsMap: Any?) {
+        self.txId = txId
+        self.blockTimestamp = blockTimestamp
+        self.blockNumber = blockNumber
+        self.ret = ret
+        self.netUsage = netUsage
+        self.netFee = netFee
+        self.energyUsage = energyUsage
+        self.energyFee = energyFee
+        self.energyUsageTotal = energyUsageTotal
+        self.signature = []
+        self.rawData = RawData(contract: contractsMap, refBlockBytes: "", refBlockHash: "", expiration: 0, feeLimit: nil, timestamp: blockTimestamp)
+    }
+
     struct Ret: ImmutableMappable {
         let contractRet: String
         let fee: Int
@@ -39,6 +55,11 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
         public init(map: Map) throws {
             contractRet = try map.value("contractRet")
             fee = try map.value("fee")
+        }
+
+        init(contractRet: String, fee: Int) {
+            self.contractRet = contractRet
+            self.fee = fee
         }
     }
 
@@ -57,6 +78,15 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
             expiration = try map.value("expiration")
             feeLimit = try map.value("fee_limit")
             timestamp = try map.value("timestamp")
+        }
+
+        init(contract: Any?, refBlockBytes: String, refBlockHash: String, expiration: Int, feeLimit: Int?, timestamp: Int) {
+            self.contract = contract
+            self.refBlockBytes = refBlockBytes
+            self.refBlockHash = refBlockHash
+            self.expiration = expiration
+            self.feeLimit = feeLimit
+            self.timestamp = timestamp
         }
     }
 }
