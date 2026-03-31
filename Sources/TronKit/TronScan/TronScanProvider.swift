@@ -1,3 +1,4 @@
+import Alamofire
 import BigInt
 import Foundation
 import HsToolKit
