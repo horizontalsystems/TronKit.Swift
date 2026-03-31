@@ -1,10 +1,10 @@
 import Foundation
 
 class TransactionSender {
-    private let tronGridProvider: TronGridProvider
+    private let nodeApiProvider: INodeApiProvider
 
-    init(tronGridProvider: TronGridProvider) {
-        self.tronGridProvider = tronGridProvider
+    init(nodeApiProvider: INodeApiProvider) {
+        self.nodeApiProvider = nodeApiProvider
     }
 }
 
@@ -18,7 +18,11 @@ extension TransactionSender {
 
         switch contract {
         case let transfer as TransferContract:
-            createdTransaction = try await tronGridProvider.createTransaction(ownerAddress: transfer.ownerAddress.hex, toAddress: transfer.toAddress.hex, amount: transfer.amount)
+            createdTransaction = try await nodeApiProvider.createTransaction(
+                ownerAddress: transfer.ownerAddress.hex,
+                toAddress: transfer.toAddress.hex,
+                amount: transfer.amount
+            )
 
         case let smartContract as TriggerSmartContract:
             guard let functionSelector = smartContract.functionSelector,
@@ -28,11 +32,14 @@ extension TransactionSender {
                 throw Kit.SendError.invalidParameter
             }
 
-            createdTransaction = try await tronGridProvider.triggerSmartContract(
+            createdTransaction = try await nodeApiProvider.triggerSmartContract(
                 ownerAddress: smartContract.ownerAddress.hex,
                 contractAddress: smartContract.contractAddress.hex,
                 functionSelector: functionSelector,
                 parameter: parameter,
+                callValue: smartContract.callValue,
+                callTokenValue: smartContract.callTokenValue,
+                tokenId: smartContract.tokenId,
                 feeLimit: feeLimit
             )
 
@@ -54,13 +61,13 @@ extension TransactionSender {
         transaction.rawData = rawData
         transaction.signature = [signature]
 
-        try await tronGridProvider.broadcastTransaction(hexData: transaction.serializedData())
+        try await nodeApiProvider.broadcastTransaction(hexData: transaction.serializedData())
 
         return createdTransaction
     }
 
     func broadcastTransaction(createdTransaction: CreatedTransactionResponse, signer: Signer) async throws {
         let signature = try signer.signature(hash: createdTransaction.txID)
-        return try await tronGridProvider.broadcastTransaction(createdTransaction: createdTransaction, signature: signature)
+        return try await nodeApiProvider.broadcastTransaction(createdTransaction: createdTransaction, signature: signature)
     }
 }

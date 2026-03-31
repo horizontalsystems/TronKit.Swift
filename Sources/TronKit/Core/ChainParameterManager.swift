@@ -1,9 +1,9 @@
 class ChainParameterManager {
-    private let tronGridProvider: TronGridProvider
+    private let nodeApiProvider: INodeApiProvider
     private let storage: SyncerStorage
 
-    init(tronGridProvider: TronGridProvider, storage: SyncerStorage) {
-        self.tronGridProvider = tronGridProvider
+    init(nodeApiProvider: INodeApiProvider, storage: SyncerStorage) {
+        self.nodeApiProvider = nodeApiProvider
         self.storage = storage
     }
 }
@@ -26,7 +26,7 @@ extension ChainParameterManager {
     }
 
     func sync() async throws {
-        let parameters = try await tronGridProvider.fetchChainParameters()
+        let parameters = try await nodeApiProvider.fetchChainParameters()
         for parameter in parameters {
             storage.saveChainParameter(key: parameter.key, value: parameter.value)
         }

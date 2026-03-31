@@ -57,7 +57,7 @@ extension TrxAdapter {
     }
 
     var transactionsSyncState: SyncState {
-        tronKit.syncState
+        tronKit.transactionsSyncState
     }
 
     var balance: Decimal {
@@ -81,7 +81,7 @@ extension TrxAdapter {
     }
 
     var transactionsSyncStatePublisher: AnyPublisher<Void, Never> {
-        tronKit.syncStatePublisher.map { _ in () }.eraseToAnyPublisher()
+        tronKit.transactionsSyncStatePublisher.map { _ in () }.eraseToAnyPublisher()
     }
 
     var balancePublisher: AnyPublisher<Void, Never> {
@@ -93,7 +93,7 @@ extension TrxAdapter {
     }
 
     func transactions(from hash: Data?, limit: Int?) -> [TransactionRecord] {
-        tronKit.transactions(tagQueries: [], fromHash: hash, limit: limit).compactMap { transactionRecord(fullTransaction: $0) }
+        tronKit.transactions(tagQueries: [], hash: hash, descending: true, limit: limit).compactMap { transactionRecord(fullTransaction: $0) }
     }
 
     func transaction(hash _: Data, interTransactionIndex _: Int) -> TransactionRecord? {

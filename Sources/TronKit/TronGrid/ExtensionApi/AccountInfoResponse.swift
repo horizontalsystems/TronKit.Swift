@@ -6,6 +6,11 @@ struct AccountInfoResponse: ImmutableMappable {
     let balance: Int
     let trc20: [Address: BigUInt]
 
+    init(balance: Int, trc20: [Address: BigUInt]) {
+        self.balance = balance
+        self.trc20 = trc20
+    }
+
     public init(map: Map) throws {
         balance = (try? map.value("balance")) ?? 0
 
