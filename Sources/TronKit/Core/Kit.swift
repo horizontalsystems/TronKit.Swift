@@ -237,15 +237,15 @@ public extension Kit {
         let tronProvider = TronGridProvider(
             networkManager: networkManager,
             baseUrl: rpcSource.urls[0].absoluteString,
-            apiKey: rpcSource.apiKey,
+            apiKeys: rpcSource.apiKeys,
             auth: rpcSource.auth
         )
 
         // Build history provider from TransactionSource
         let historyProvider: IHistoryProvider? = transactionSource.map { source in
             switch source.type {
-            case let .tronGrid(url, apiKey):
-                return TronGridProvider(networkManager: networkManager, baseUrl: url.absoluteString, apiKey: apiKey)
+            case let .tronGrid(url, apiKeys):
+                return TronGridProvider(networkManager: networkManager, baseUrl: url.absoluteString, apiKeys: apiKeys)
             case let .tronScan(url, apiKey):
                 return TronScanProvider(networkManager: networkManager, baseUrl: url.absoluteString, apiKey: apiKey)
             }
@@ -300,8 +300,8 @@ public extension Kit {
         return kit
     }
 
-    static func call(networkManager: NetworkManager, network: Network, contractAddress: Address, data: Data, apiKey: String?) async throws -> Data {
-        let provider = TronGridProvider(networkManager: networkManager, baseUrl: network.tronGridUrl, apiKey: apiKey)
+    static func call(networkManager: NetworkManager, network: Network, contractAddress: Address, data: Data, apiKeys: [String]) async throws -> Data {
+        let provider = TronGridProvider(networkManager: networkManager, baseUrl: network.tronGridUrl, apiKeys: apiKeys)
         return try await provider.fetch(rpc: CallJsonRpc(contractAddress: contractAddress, data: data))
     }
 

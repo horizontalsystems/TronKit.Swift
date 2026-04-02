@@ -6,31 +6,39 @@ import HsToolKit
 class TronGridProvider {
     private let networkManager: NetworkManager
     private let baseUrl: String
+    private let syncedState: SyncedState
 
-    private let headers: HTTPHeaders
+    private let authHeaders: HTTPHeaders
     private var currentRpcId = 0
     private let pageLimit = 200
 
-    init(networkManager: NetworkManager, baseUrl: String, apiKey: String?, auth: String? = nil) {
+    init(networkManager: NetworkManager, baseUrl: String, apiKeys: [String], auth: String? = nil) {
         self.networkManager = networkManager
         self.baseUrl = baseUrl.hasSuffix("/") ? baseUrl : baseUrl + "/"
 
-        var headers = HTTPHeaders()
+        syncedState = SyncedState(apiKeys: apiKeys)
 
-        if let apiKey {
-            headers.add(.init(name: "TRON-PRO-API-KEY", value: apiKey))
-        }
+        var headers = HTTPHeaders()
 
         if let auth {
             let base64 = Data(auth.utf8).base64EncodedString()
             headers.add(.init(name: "Authorization", value: "Basic \(base64)"))
         }
 
-        self.headers = headers
+        authHeaders = headers
+    }
+
+    private func currentHeaders() async -> HTTPHeaders {
+        var headers = authHeaders
+        if let apiKey = await syncedState.getApiKey() {
+            headers.add(.init(name: "TRON-PRO-API-KEY", value: apiKey))
+        }
+        return headers
     }
 
     private func rpcApiFetch(parameters: [String: Any]) async throws -> Any {
-        try await networkManager.fetchJson(
+        let headers = await currentHeaders()
+        return try await networkManager.fetchJson(
             url: baseUrl + "jsonrpc",
             method: .post,
             parameters: parameters,
@@ -42,6 +50,7 @@ class TronGridProvider {
     }
 
     private func extensionApiFetch(path: String, parameters: Parameters) async throws -> (data: [[String: Any]], meta: [String: Any]) {
+        let headers = await currentHeaders()
         let json = try await networkManager.fetchJson(url: "\(baseUrl)\(path)", method: .get, parameters: parameters, headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
@@ -64,6 +73,7 @@ class TronGridProvider {
     }
 
     private func nodeApiFetch(path: String, parameters: Parameters) async throws -> [String: Any] {
+        let headers = await currentHeaders()
         let json = try await networkManager.fetchJson(url: "\(baseUrl)\(path)", method: .post, parameters: parameters, encoding: JSONEncoding.default, headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any] else {
@@ -146,6 +156,7 @@ extension TronGridProvider: INodeApiProvider {
     }
 
     func fetchChainParameters() async throws -> [ChainParameterResponse] {
+        let headers = await currentHeaders()
         let json = try await networkManager.fetchJson(url: "\(baseUrl)wallet/getchainparameters", method: .get, parameters: [:], headers: headers, responseCacherBehavior: .doNotCache)
 
         guard let map = json as? [String: Any],
@@ -158,6 +169,7 @@ extension TronGridProvider: INodeApiProvider {
     }
 
     func createTransaction(ownerAddress: String, toAddress: String, amount: Int) async throws -> CreatedTransactionResponse {
+        let headers = await currentHeaders()
         let json = try await networkManager.fetchJson(
             url: "\(baseUrl)wallet/createtransaction",
             method: .post,
@@ -201,6 +213,7 @@ extension TronGridProvider: INodeApiProvider {
     }
 
     func broadcastTransaction(hexData: Data) async throws {
+        let headers = await currentHeaders()
         _ = try await networkManager.fetchJson(
             url: "\(baseUrl)wallet/broadcasthex",
             method: .post,
@@ -212,6 +225,7 @@ extension TronGridProvider: INodeApiProvider {
     }
 
     func broadcastTransaction(createdTransaction: CreatedTransactionResponse, signature: Data) async throws {
+        let headers = await currentHeaders()
         _ = try await networkManager.fetchJson(
             url: "\(baseUrl)wallet/broadcasttransaction",
             method: .post,
@@ -308,5 +322,20 @@ extension TronGridProvider {
         case invalidStatus
         case failedToFetchAccountInfo
         case fullNodeApiError(code: String, message: String)
+    }
+
+    actor SyncedState {
+        private let apiKeys: [String]
+        private var index = 0
+
+        init(apiKeys: [String]) {
+            self.apiKeys = apiKeys
+        }
+
+        func getApiKey() -> String? {
+            guard !apiKeys.isEmpty else { return nil }
+            index = (index + 1) % apiKeys.count
+            return apiKeys[index]
+        }
     }
 }

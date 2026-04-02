@@ -2,16 +2,16 @@ import Foundation
 
 public struct RpcSource {
     let urls: [URL]
-    let apiKey: String?
+    let apiKeys: [String]
     let auth: String?
 
-    public init(urls: [URL], apiKey: String? = nil, auth: String? = nil) {
+    public init(urls: [URL], apiKeys: [String] = [], auth: String? = nil) {
         self.urls = urls
-        self.apiKey = apiKey
+        self.apiKeys = apiKeys
         self.auth = auth
     }
 
-    public static func tronGrid(network: Network, apiKey: String?) -> RpcSource {
-        RpcSource(urls: [URL(string: network.tronGridUrl)!], apiKey: apiKey)
+    public static func tronGrid(network: Network, apiKeys: [String]) -> RpcSource {
+        RpcSource(urls: [URL(string: network.tronGridUrl)!], apiKeys: apiKeys)
     }
 }
