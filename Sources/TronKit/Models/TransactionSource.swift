@@ -5,14 +5,14 @@ public struct TransactionSource {
     public let type: SourceType
 
     public enum SourceType {
-        case tronGrid(url: URL, apiKey: String?)
+        case tronGrid(url: URL, apiKeys: [String])
         case tronScan(url: URL, apiKey: String?)
     }
 
-    public static func tronGrid(network: Network, apiKey: String?) -> TransactionSource {
+    public static func tronGrid(network: Network, apiKeys: [String]) -> TransactionSource {
         TransactionSource(
             name: "TronGrid",
-            type: .tronGrid(url: URL(string: network.tronGridUrl)!, apiKey: apiKey)
+            type: .tronGrid(url: URL(string: network.tronGridUrl)!, apiKeys: apiKeys)
         )
     }
 
