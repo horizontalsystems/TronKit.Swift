@@ -115,7 +115,7 @@ extension TronScanProvider: IHistoryProvider {
         }
 
         let transactions: [ITransactionResponse] = data.compactMap { json -> TransactionResponse? in
-            guard let hash = (json["hash"] as? String).flatMap({ $0.hs.hexData }),
+            guard let hash = (json["hash"] as? String).flatMap(\.hs.hexData),
                   let timestamp = json["timestamp"] as? Int,
                   let block = json["block"] as? Int
             else { return nil }
@@ -133,7 +133,8 @@ extension TronScanProvider: IHistoryProvider {
             var contractsMap: [[String: Any]]? = nil
             if let contractType = json["contractType"] as? Int,
                let typeString = TronScanProvider.contractTypeName(contractType),
-               let contractData = json["contractData"] as? [String: Any] {
+               let contractData = json["contractData"] as? [String: Any]
+            {
                 contractsMap = [[
                     "type": typeString,
                     "parameter": [
