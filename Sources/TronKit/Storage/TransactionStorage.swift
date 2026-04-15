@@ -93,7 +93,7 @@ extension TransactionStorage {
     func transactionsBefore(tagQueries: [TransactionTagQuery], hash: Data?, descending: Bool, limit: Int?) -> [Transaction] {
         try! dbPool.read { db in
             var arguments = [DatabaseValueConvertible]()
-            var whereConditions: [String] = ["\(Transaction.Columns.processed) = 1"]
+            var whereConditions = ["\(Transaction.Columns.processed) = 1"]
             let queries = tagQueries.filter { !$0.isEmpty }
             var joinClause = ""
 
@@ -245,8 +245,15 @@ extension TransactionStorage {
 
     func save(trc20Transfers: [Trc20EventRecord]) {
         try! dbPool.write { db in
-            for transfer in trc20Transfers {
-                try transfer.save(db)
+            let transfersByHash = Dictionary(grouping: trc20Transfers, by: { $0.transactionHash })
+            for (hash, transfers) in transfersByHash {
+                let alreadyExists = try Trc20EventRecord
+                    .filter(Trc20EventRecord.Columns.transactionHash == hash)
+                    .fetchCount(db) > 0
+                if alreadyExists { continue }
+                for transfer in transfers {
+                    try transfer.save(db)
+                }
             }
         }
     }
