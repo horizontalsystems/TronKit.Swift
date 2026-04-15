@@ -21,7 +21,7 @@ class FeeProvider {
     }
 
     func isAccountActive(address: Address) async throws -> Bool {
-        return try await nodeApiProvider.fetchAccount(address: address.base58) != nil
+        try await nodeApiProvider.fetchAccount(address: address.base58) != nil
     }
 }
 

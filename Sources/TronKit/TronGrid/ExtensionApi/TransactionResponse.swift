@@ -34,7 +34,8 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
 
     init(txId: Data, blockTimestamp: Int, blockNumber: Int, ret: [Ret],
          netUsage: Int, netFee: Int, energyUsage: Int, energyFee: Int, energyUsageTotal: Int,
-         contractsMap: Any?) {
+         contractsMap: Any?)
+    {
         self.txId = txId
         self.blockTimestamp = blockTimestamp
         self.blockNumber = blockNumber
@@ -44,8 +45,8 @@ struct TransactionResponse: ImmutableMappable, ITransactionResponse {
         self.energyUsage = energyUsage
         self.energyFee = energyFee
         self.energyUsageTotal = energyUsageTotal
-        self.signature = []
-        self.rawData = RawData(contract: contractsMap, refBlockBytes: "", refBlockHash: "", expiration: 0, feeLimit: nil, timestamp: blockTimestamp)
+        signature = []
+        rawData = RawData(contract: contractsMap, refBlockBytes: "", refBlockHash: "", expiration: 0, feeLimit: nil, timestamp: blockTimestamp)
     }
 
     struct Ret: ImmutableMappable {

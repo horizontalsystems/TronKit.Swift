@@ -73,5 +73,4 @@ extension AccountInfoStorage {
             return String(balance.id.dropFirst(prefix.count))
         }
     }
-
 }
