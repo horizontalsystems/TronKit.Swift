@@ -12,6 +12,7 @@ class Syncer {
     private let historyProvider: IHistoryProvider?
     private let storage: SyncerStorage
     private let address: Address
+    private let gaslessAccount: Bool
     private var syncing = false
 
     @DistinctPublished private(set) var state: SyncState = .notSynced(error: Kit.SyncError.notStarted)
@@ -25,7 +26,8 @@ class Syncer {
         nodeApiProvider: INodeApiProvider,
         historyProvider: IHistoryProvider?,
         storage: SyncerStorage,
-        address: Address
+        address: Address,
+        gaslessAccount: Bool
     ) {
         self.accountInfoManager = accountInfoManager
         self.chainParameterManager = chainParameterManager
@@ -35,6 +37,7 @@ class Syncer {
         self.historyProvider = historyProvider
         self.storage = storage
         self.address = address
+        self.gaslessAccount = gaslessAccount
 
         syncTimer.delegate = self
         lastBlockHeight = storage.lastBlockHeight ?? 0
@@ -132,6 +135,11 @@ extension Syncer: ISyncTimerDelegate {
             }
         } catch TronGridProvider.RequestError.failedToFetchAccountInfo {
             accountInfoManager.handleInactiveAccount()
+            // Gasless accounts may receive TRC20 before the account is created on-chain.
+            // History endpoint refused, fall back to direct balanceOf RPC for watched tokens.
+            if gaslessAccount {
+                await syncWatchedTrc20BalancesViaRpc(rpcApiProvider: rpcApiProvider)
+            }
         }
         set(state: .synced)
     }
@@ -139,23 +147,32 @@ extension Syncer: ISyncTimerDelegate {
     // Fetch TRX balance via node API + TRC20 balances via balanceOf RPC calls.
     // Covers both previously seen tokens and manually watched tokens.
     private func syncAccountViaRpc(address: String, rpcApiProvider: IRpcApiProvider, nodeApiProvider: INodeApiProvider) async throws {
-        guard let account = try await nodeApiProvider.fetchAccount(address: address) else {
+        let account = try await nodeApiProvider.fetchAccount(address: address)
+
+        if let account {
+            accountInfoManager.handle(trxBalance: account.balance)
+        } else {
             accountInfoManager.handleInactiveAccount()
-            set(state: .synced)
-            return
+            // Gasless accounts may have TRC20 balances even when the native account is missing.
+            if !gaslessAccount {
+                set(state: .synced)
+                return
+            }
         }
 
-        accountInfoManager.handle(trxBalance: account.balance)
+        await syncWatchedTrc20BalancesViaRpc(rpcApiProvider: rpcApiProvider)
 
+        set(state: .synced)
+    }
+
+    private func syncWatchedTrc20BalancesViaRpc(rpcApiProvider: IRpcApiProvider) async {
         for contractAddress in accountInfoManager.trc20AddressesToSync() {
-            let methodData = BalanceOfMethod(owner: self.address).encodedABI()
+            let methodData = BalanceOfMethod(owner: address).encodedABI()
             let callRpc = CallJsonRpc(contractAddress: contractAddress, data: methodData)
 
             if let response = try? await rpcApiProvider.fetch(rpc: callRpc), response.count >= 32 {
                 accountInfoManager.handle(trc20Balance: BigUInt(response[0 ... 31]), contractAddress: contractAddress)
             }
         }
-
-        set(state: .synced)
     }
 }

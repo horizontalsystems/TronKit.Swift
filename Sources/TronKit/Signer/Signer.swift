@@ -50,6 +50,10 @@ public extension Signer {
         let hdWallet = HDWallet(seed: seed, coinType: 195, xPrivKey: HDExtendedKeyVersion.xprv.rawValue)
         return try hdWallet.privateKey(account: 0, index: 0, chain: .external).raw
     }
+
+    static func sign(hash: Data, privateKey: Data) throws -> Data {
+        try Crypto.ellipticSign(hash, privateKey: privateKey)
+    }
 }
 
 public extension Signer {
