@@ -227,7 +227,8 @@ public extension Kit {
         walletId: String,
         rpcSource: RpcSource,
         transactionSource: TransactionSource?,
-        minLogLevel: Logger.Level = .error
+        minLogLevel: Logger.Level = .error,
+        gaslessAccount: Bool = false
     ) throws -> Kit {
         let logger = Logger(minLogLevel: minLogLevel)
         let uniqueId = "\(walletId)-\(network.rawValue)"
@@ -273,7 +274,8 @@ public extension Kit {
             nodeApiProvider: tronProvider,
             historyProvider: historyProvider,
             storage: syncerStorage,
-            address: address
+            address: address,
+            gaslessAccount: gaslessAccount
         )
 
         let transactionSyncer = historyProvider.map {
