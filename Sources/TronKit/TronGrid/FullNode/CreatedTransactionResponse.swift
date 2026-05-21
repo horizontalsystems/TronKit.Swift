@@ -2,11 +2,11 @@ import Foundation
 import ObjectMapper
 
 public struct CreatedTransactionResponse: ImmutableMappable {
-    let visible: Bool?
-    let txID: Data
     let rawData: TransactionResponse.RawData
-    let rawDataMap: [String: Any]
-    let rawDataHex: Data
+    public let visible: Bool?
+    public let txID: Data
+    public let rawDataMap: [String: Any]
+    public let rawDataHex: Data
 
     public init(map: Map) throws {
         visible = (try? map.value("visible")) ?? false
