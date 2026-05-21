@@ -173,9 +173,10 @@ public extension Kit {
         transactionManager.tagTokens()
     }
 
-    func send(contract: Contract, signer: Signer, feeLimit: Int? = 0) async throws {
+    @discardableResult func send(contract: Contract, signer: Signer, feeLimit: Int? = 0) async throws -> CreatedTransactionResponse {
         let newTransaction = try await transactionSender.sendTransaction(contract: contract, signer: signer, feeLimit: feeLimit)
         transactionManager.handle(newTransaction: newTransaction)
+        return newTransaction
     }
 
     func send(createdTransaction: CreatedTransactionResponse, signer: Signer) async throws {
