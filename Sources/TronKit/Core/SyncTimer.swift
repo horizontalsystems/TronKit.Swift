@@ -44,7 +44,7 @@ class SyncTimer {
     }
 
     @objc func onFireTimer() {
-        Task { [weak self] in
+        Task(priority: .userInitiated) { [weak self] in
             self?.delegate?.sync()
         }.store(in: &tasks)
     }

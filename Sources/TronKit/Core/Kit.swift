@@ -153,6 +153,27 @@ public extension Kit {
         )
     }
 
+    // Optimistically show an outgoing TRC20 transfer as pending in history, keyed by its on-chain `hash`, before the
+    // natural sync sees it (e.g. a transfer broadcast externally on behalf of this watched address). Decorates as outgoing via
+    // the fabricated TriggerSmartContract (owner = this address); confirms itself when the on-chain tx is synced under
+    // the same hash. Inject-once (guarded in TransactionManager) — never downgrades an existing row.
+    func handlePendingTrc20Transfer(hash: Data, contractAddress: Address, toAddress: Address, amount: BigUInt, timestamp: Int) {
+        let trigger = transferTrc20TriggerSmartContract(contractAddress: contractAddress, toAddress: toAddress, amount: amount)
+        let value: [String: Any] = [
+            "data": trigger.data,
+            "owner_address": address.hex,
+            "contract_address": contractAddress.hex,
+            "call_value": 0, // required by TriggerSmartContract.init(map:) — its absence falls back to UnknownContract
+        ]
+        let contractsMap: [[String: Any]] = [["type": TriggerSmartContract.type, "parameter": ["value": value]]]
+        transactionManager.handle(pendingHash: hash, timestamp: timestamp, contractsMap: contractsMap)
+    }
+
+    // Flip a previously-injected pending row (see `handlePendingTrc20Transfer`) to failed. No-op if already confirmed.
+    func markPendingTransferFailed(hash: Data) {
+        transactionManager.markFailed(hash: hash)
+    }
+
     func approveTrc20TriggerSmartContract(contractAddress: Address, spender: Address, amount: BigUInt) -> TriggerSmartContract {
         let approveMethod = ApproveMethod(spender: spender, value: amount)
         let data = approveMethod.encodedABI().hs.hex
@@ -282,6 +303,7 @@ public extension Kit {
         let transactionSyncer = historyProvider.map {
             TransactionSyncer(historyProvider: $0, transactionManager: transactionManager, storage: syncerStorage, address: address)
         }
+        syncer.transactionSyncer = transactionSyncer
 
         let transactionSender = TransactionSender(nodeApiProvider: tronProvider)
         let allowanceManager = AllowanceManager(rpcApiProvider: tronProvider, address: address)

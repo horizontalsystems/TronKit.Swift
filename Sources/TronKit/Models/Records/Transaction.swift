@@ -61,6 +61,29 @@ public class Transaction: Record {
         }
     }
 
+    init(hash: Data, timestamp: Int, isFailed: Bool, blockNumber: Int?, confirmed: Bool,
+         fee: Int?, netUsage: Int?, netFee: Int?, energyUsage: Int?, energyFee: Int?, energyUsageTotal: Int?,
+         contractsRaw: Data?)
+    {
+        self.hash = hash
+        self.timestamp = timestamp
+        self.isFailed = isFailed
+        self.blockNumber = blockNumber
+        self.confirmed = confirmed
+        processed = false
+
+        self.fee = fee
+        self.netUsage = netUsage
+        self.netFee = netFee
+        self.energyUsage = energyUsage
+        self.energyFee = energyFee
+        self.energyUsageTotal = energyUsageTotal
+
+        self.contractsRaw = contractsRaw
+
+        super.init()
+    }
+
     override public class var databaseTableName: String {
         "transactions"
     }

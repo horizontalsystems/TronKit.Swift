@@ -183,7 +183,10 @@ extension TransactionStorage {
 
     func pendingTransactions() -> [Transaction] {
         try! dbPool.read { db in
-            try Transaction.filter(Transaction.Columns.confirmed == false).fetchAll(db)
+            try Transaction
+                .filter(Transaction.Columns.confirmed == false)
+                .filter(Transaction.Columns.isFailed == false) // failed IS an outcome — not pending
+                .fetchAll(db)
         }
     }
 
@@ -223,16 +226,48 @@ extension TransactionStorage {
         }
     }
 
+    func transaction(hash: Data) -> Transaction? {
+        try? dbPool.read { db in try Transaction.filter(Transaction.Columns.hash == hash).fetchOne(db) }
+    }
+
     func save(transactions: [Transaction], replaceOnConflict: Bool) {
         try! dbPool.write { db in
             for transaction in transactions {
-                if !replaceOnConflict, try transaction.exists(db) {
+                if !replaceOnConflict,
+                   let existing = try Transaction.filter(Transaction.Columns.hash == transaction.hash).fetchOne(db)
+                {
+                    // Strict-upgrade merge: only when the incoming row confirms a still-unconfirmed existing one
+                    // (e.g. a synced TRC20 tx confirming a locally-injected pending row). Otherwise keep existing.
+                    if !existing.confirmed, transaction.confirmed {
+                        try Self.merge(existing: existing, incoming: transaction).save(db)
+                    }
                     continue
                 }
 
                 try transaction.save(db)
             }
         }
+    }
+
+    // Fold a confirming incoming row into an existing one. Incoming wins for on-chain facts — including isFailed:
+    // this merge only fires when the incoming row is chain-synced (strict upgrade), so its outcome overrides a
+    // locally-guessed failure (e.g. a deadline-fail on a tx that actually landed). The existing row keeps its
+    // decoration-bearing contract. processed=false so process() re-emits the now-confirmed row.
+    static func merge(existing: Transaction, incoming: Transaction) -> Transaction {
+        Transaction(
+            hash: existing.hash,
+            timestamp: incoming.timestamp,
+            isFailed: incoming.isFailed,
+            blockNumber: incoming.blockNumber ?? existing.blockNumber,
+            confirmed: existing.confirmed || incoming.confirmed,
+            fee: incoming.fee ?? existing.fee,
+            netUsage: incoming.netUsage ?? existing.netUsage,
+            netFee: incoming.netFee ?? existing.netFee,
+            energyUsage: incoming.energyUsage ?? existing.energyUsage,
+            energyFee: incoming.energyFee ?? existing.energyFee,
+            energyUsageTotal: incoming.energyUsageTotal ?? existing.energyUsageTotal,
+            contractsRaw: existing.contractsRaw ?? incoming.contractsRaw
+        )
     }
 
     func save(internalTransactions: [InternalTransaction]) {
