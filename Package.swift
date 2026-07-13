@@ -38,5 +38,12 @@ let package = Package(
                 .product(name: "HsExtensions", package: "HsExtensions.Swift"),
             ]
         ),
+        .testTarget(
+            name: "TronKitTests",
+            dependencies: [
+                "TronKit",
+                .product(name: "GRDB", package: "GRDB.swift"),
+            ]
+        ),
     ]
 )

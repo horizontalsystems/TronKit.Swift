@@ -2,6 +2,10 @@ import BigInt
 import HsExtensions
 
 class Syncer {
+    // Mirrors EvmKit (Kit.onUpdate(lastBlockHeight:) → transactionSyncManager.sync()): a new block also triggers the
+    // transaction sync, so history updates while the app is foreground — not only on start/refresh.
+    weak var transactionSyncer: TransactionSyncer?
+
     private var tasks = Set<AnyTask>()
 
     private let accountInfoManager: AccountInfoManager
@@ -44,7 +48,7 @@ class Syncer {
     }
 
     private func syncChainParameters() {
-        Task { [chainParameterManager] in
+        Task(priority: .userInitiated) { [chainParameterManager] in
             try await chainParameterManager.sync()
         }
     }
@@ -89,7 +93,7 @@ extension Syncer: ISyncTimerDelegate {
     }
 
     func sync() {
-        Task { [weak self, lastBlockHeight, rpcApiProvider, nodeApiProvider, historyProvider, address, storage] in
+        Task(priority: .userInitiated) { [weak self, lastBlockHeight, rpcApiProvider, nodeApiProvider, historyProvider, address, storage] in
             do {
                 guard let syncer = self, !syncer.syncing else { return }
                 syncer.syncing = true
@@ -103,6 +107,8 @@ extension Syncer: ISyncTimerDelegate {
 
                 storage.save(lastBlockHeight: newLastBlockHeight)
                 self?.lastBlockHeight = newLastBlockHeight
+
+                syncer.transactionSyncer?.sync()
 
                 if let historyProvider {
                     do {

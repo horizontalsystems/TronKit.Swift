@@ -166,6 +166,51 @@ extension TransactionManager {
         process(initial: false)
     }
 
+    func handle(pendingHash hash: Data, timestamp: Int, contractsMap: Any) {
+        guard storage.transaction(hash: hash) == nil else {
+            return
+        }
+
+        let transaction = Transaction(
+            hash: hash,
+            timestamp: timestamp,
+            isFailed: false,
+            blockNumber: nil,
+            confirmed: false,
+            contractsMap: contractsMap
+        )
+
+        storage.save(transactions: [transaction], replaceOnConflict: true)
+        process(initial: false)
+    }
+
+    // Flip a still-pending injected row to failed (e.g. an externally broadcast transfer that never made it on-chain
+    // by its deadline). No-op if the row is missing, already confirmed (never override a real confirm), or already failed.
+    // Rebuilds the row processed=false so process() re-emits the failed state.
+    func markFailed(hash: Data) {
+        guard let existing = storage.transaction(hash: hash), !existing.confirmed, !existing.isFailed else {
+            return
+        }
+
+        let failed = Transaction(
+            hash: existing.hash,
+            timestamp: existing.timestamp,
+            isFailed: true,
+            blockNumber: existing.blockNumber,
+            confirmed: false,
+            fee: existing.fee,
+            netUsage: existing.netUsage,
+            netFee: existing.netFee,
+            energyUsage: existing.energyUsage,
+            energyFee: existing.energyFee,
+            energyUsageTotal: existing.energyUsageTotal,
+            contractsRaw: existing.contractsRaw
+        )
+
+        storage.save(transactions: [failed], replaceOnConflict: true)
+        process(initial: false)
+    }
+
     func tagTokens() -> [TagToken] {
         do {
             return try storage.tagTokens()

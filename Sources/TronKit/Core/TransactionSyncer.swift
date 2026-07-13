@@ -1,3 +1,4 @@
+import Foundation
 import HsExtensions
 
 class TransactionSyncer {
@@ -36,7 +37,7 @@ class TransactionSyncer {
 
 extension TransactionSyncer {
     func sync() {
-        Task { [weak self, historyProvider, address, storage] in
+        Task(priority: .userInitiated) { [weak self, historyProvider, address, storage] in
             do {
                 guard let syncer = self, !syncer.syncing else { return }
                 syncer.syncing = true
