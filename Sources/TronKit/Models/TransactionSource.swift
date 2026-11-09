@@ -16,10 +16,10 @@ public struct TransactionSource {
         )
     }
 
-    public static func tronScan(apiKey: String?) -> TransactionSource {
+    public static func tronScan(network: Network = .mainNet, apiKey: String?) -> TransactionSource {
         TransactionSource(
             name: "TronScan",
-            type: .tronScan(url: URL(string: "https://apilist.tronscanapi.com/api/")!, apiKey: apiKey)
+            type: .tronScan(url: URL(string: network.tronScanApiUrl)!, apiKey: apiKey)
         )
     }
 }

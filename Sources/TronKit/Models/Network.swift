@@ -10,4 +10,12 @@ public enum Network: String {
         case .shastaTestnet: return "https://api.shasta.trongrid.io/"
         }
     }
+
+    public var tronScanApiUrl: String {
+        switch self {
+        case .mainNet: return "https://apilist.tronscanapi.com/api/"
+        case .nileTestnet: return "https://nileapi.tronscan.org/api/"
+        case .shastaTestnet: return "https://shastapi.tronscan.org/api/"
+        }
+    }
 }
